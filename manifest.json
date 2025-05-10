@@ -1,0 +1,54 @@
+{
+  "manifest_version": 3,
+  "name": "divvun-webextension-webpack",
+  "description": "A web extension with TypeScript and Rust-WASM",
+  "version": "0.1",
+  "homepage_url": "https://hahah.com",
+
+  "icons": {
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "96": "icons/icon-96.png",
+    "128": "icons/icon-128.png"
+  },
+
+  "background": {
+    "type": "module",
+    "service_worker": "background.js"
+  },
+  "host_permissions": ["*://*/*", "file:///*/*"],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ],
+
+  "action": {
+    "default_popup": "popup.html"
+  },
+
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": false
+  },
+
+  "permissions": ["storage", "tabs"],
+
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
+  },
+  
+  "web_accessible_resources": [
+    {
+        "matches": [
+            "<all_urls>"
+        ], 
+        "resources": [
+            "src_wasm_index_js.js",
+            "*module.wasm",
+            "wasm/*"
+        ]
+    }
+]
+}
