@@ -42,7 +42,7 @@ module.exports = {
         {
           from: "./src/wasm",
           to: "./wasm",
-          globOptions: { ignore: [".gitignore", "**/*.ts"] },
+          globOptions: { ignore: ["**/*.ts", "**/.gitignore", "**/package.json"] },
         },
       ],
     }),
