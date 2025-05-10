@@ -6,7 +6,7 @@ const loadWasmModule = async () => {
     const wasmPath = browser.runtime.getURL("wasm/index_bg.wasm");
     const jsPath = browser.runtime.getURL("wasm/index.js");
 
-    // Load the JS module first
+    // Important to have webpack ignore the wasm js to prevent bundling, which breaks everything
     const jsModule = await import(/* webpackIgnore: true */ jsPath);
     
     // Then fetch and initialize WASM
