@@ -39,7 +39,11 @@ module.exports = {
       patterns: [
         { from: "./manifest.json", to: "./" },
         { from: "./icons", to: "./icons" },
-        { from: "./src/wasm", to: "./wasm" },
+        {
+          from: "./src/wasm",
+          to: "./wasm",
+          globOptions: { ignore: [".gitignore", "**/*.ts"] },
+        },
       ],
     }),
     new HtmlWebpackPlugin({
