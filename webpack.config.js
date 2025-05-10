@@ -30,6 +30,11 @@ module.exports = {
     extensions: [".tsx", ".ts", ".js"],
   },
   plugins: [
+    new WasmPackPlugin({
+      crateDirectory: path.resolve(__dirname, "rust"),
+      outDir: path.resolve(__dirname, "src/wasm"),
+      extraArgs: "--target web",
+    }),
     new CopyPlugin({
       patterns: [
         { from: "./manifest.json", to: "./" },
@@ -47,11 +52,6 @@ module.exports = {
       filename: "options.html",
       chunks: ["options"],
     }),
-    // new WasmPackPlugin({
-    //   crateDirectory: path.resolve(__dirname, "rust"),
-    //   outDir: path.resolve(__dirname, "src/wasm"),
-    //   extraArgs: "--target web",
-    // }),
   ],
   experiments: {
     asyncWebAssembly: true,
