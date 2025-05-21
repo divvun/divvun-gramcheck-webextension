@@ -46,6 +46,7 @@
         ], 
         "resources": [
             "wasm/*"
+            "*.map"
         ]
     }
 ]
