@@ -8,6 +8,7 @@
     "clean-all": "npm run clean && npm run clean-rust",
     "build": "webpack --config webpack.config.js",
     "cb": "npm run clean && npm run build",
+    "ccb": "npm run clean-all && npm run build",
     "watch": "webpack --config webpack.config.js --watch"
   },
   "keywords": [],
