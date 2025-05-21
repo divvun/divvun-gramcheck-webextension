@@ -1,5 +1,5 @@
 {
-  "name": "divvun-webextension-webpack",
+  "name": "divvun-gramcheck-webextension",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
