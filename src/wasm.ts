@@ -1,5 +1,6 @@
 import browser from "webextension-polyfill";
 
+// After many failed attempts to get the WASM module to work with webpack, this one works
 export const loadWasm = async () => {
   try {
     const wasmPath = browser.runtime.getURL("wasm/index_bg.wasm");
