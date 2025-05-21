@@ -20,7 +20,8 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["content.js"]
+      "js": ["content.js"],
+      "run_at": "document_start"
     }
   ],
 
@@ -45,7 +46,8 @@
             "<all_urls>"
         ], 
         "resources": [
-            "wasm/*"
+            "wasm/*",
+            "gramcheck-page-script.js",
             "*.map"
         ]
     }

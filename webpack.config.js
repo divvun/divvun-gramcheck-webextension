@@ -10,6 +10,7 @@ module.exports = {
   entry: {
     background: "./src/background/index.ts",
     content: "./src/content/index.ts",
+    "gramcheck-page-script": "./src/content/gramcheck-page-script.ts",
     popup: "./src/popup/index.ts",
     options: "./src/options/index.ts",
   },
