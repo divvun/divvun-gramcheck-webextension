@@ -1,9 +1,9 @@
 {
   "manifest_version": 3,
-  "name": "divvun-webextension-webpack",
-  "description": "A web extension with TypeScript and Rust-WASM",
+  "name": "divvun-gramcheck-webextension",
+  "description": "Divvun grammar checker webextension",
   "version": "0.1",
-  "homepage_url": "https://hahah.com",
+  "homepage_url": "https://divvun.org",
 
   "icons": {
     "32": "icons/icon-32.png",
