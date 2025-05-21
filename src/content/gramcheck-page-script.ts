@@ -158,8 +158,7 @@ class GramCheckOverlay extends HTMLElement {
   }
 }
 
-// IMPORTANT: First define the interface before registering the custom element
-// Create a global interface for content script to communicate with
+// Define a global interface for content script to communicate with via window.postMessage
 window.gramCheckInterface = {
   createOverlay(id: string, styles?: Partial<CSSStyleDeclaration>): string {
     const overlay = document.createElement(
@@ -196,7 +195,7 @@ window.gramCheckInterface = {
   },
 };
 
-// Now register the custom element
+// Register the custom element
 try {
   customElements.define("spell-check-overlay", GramCheckOverlay);
   console.log("Custom element defined successfully");
@@ -204,12 +203,33 @@ try {
   console.error("Failed to define custom element:", e);
 }
 
-// Make sure interface is available before dispatching event
+// Setup the message listener for communication with the content script
+window.addEventListener("message", (event) => {
+  // Make sure the message is from our extension
+  if (event.data && event.data.type === "GRAMCHECK_COMMAND") {
+    console.log("Page script received message:", event.data);
+    const { command, args } = event.data;
+
+    try {
+      // Execute the requested command
+      if (command === "createOverlay" && window.gramCheckInterface) {
+        const [id, styles] = args;
+        window.gramCheckInterface.createOverlay(id, styles);
+      } else if (command === "updateOverlay" && window.gramCheckInterface) {
+        const [id, text, errors] = args;
+        window.gramCheckInterface.updateOverlay(id, text, errors);
+      } else if (command === "updatePadding" && window.gramCheckInterface) {
+        const [overlayId, textareaId] = args;
+        window.gramCheckInterface.updatePadding(overlayId, textareaId);
+      }
+    } catch (error) {
+      console.error("Error executing command:", error);
+    }
+  }
+});
+
 console.log("Interface ready:", !!window.gramCheckInterface);
 
-// Add a small delay before firing the ready event to ensure everything is initialized
-setTimeout(() => {
-  // Signal to the content script that our page script is ready
-  console.log("Dispatching gramcheck-ready event");
-  window.dispatchEvent(new CustomEvent("gramcheck-ready"));
-}, 50);
+// Signal to the content script that our page script is ready
+console.log("Dispatching gramcheck-ready event");
+window.postMessage({ type: "GRAMCHECK_READY" }, "*");

@@ -11,12 +11,82 @@ interface GramCheckInterface {
   updatePadding: (overlayId: string, textareaId: string) => void;
 }
 
-// Extend window interface to include our injected interface
-declare global {
-  interface Window {
-    gramCheckInterface: GramCheckInterface;
+// This proxy will handle communication with the page script
+class GramCheckProxy implements GramCheckInterface {
+  private ready: boolean = false;
+
+  constructor() {
+    // Listen for messages from the page script
+    window.addEventListener("message", (event) => {
+      // Make sure the message is from our page
+      if (event.source !== window) return;
+
+      if (event.data && event.data.type === "GRAMCHECK_READY") {
+        console.log("Content script received GRAMCHECK_READY");
+        this.ready = true;
+        // Dispatch our own event for the content script
+        window.dispatchEvent(new CustomEvent("gramcheck-proxy-ready"));
+      }
+    });
+  }
+
+  isReady(): boolean {
+    return this.ready;
+  }
+
+  createOverlay(id: string, styles?: Partial<CSSStyleDeclaration>): string {
+    if (!this.ready) {
+      console.warn("GramCheckProxy: Interface not ready");
+      return "";
+    }
+
+    window.postMessage(
+      {
+        type: "GRAMCHECK_COMMAND",
+        command: "createOverlay",
+        args: [id, styles],
+      },
+      "*"
+    );
+
+    return id;
+  }
+
+  updateOverlay(id: string, text: string, errors: GrammarError[]): void {
+    if (!this.ready) {
+      console.warn("GramCheckProxy: Interface not ready");
+      return;
+    }
+
+    window.postMessage(
+      {
+        type: "GRAMCHECK_COMMAND",
+        command: "updateOverlay",
+        args: [id, text, errors],
+      },
+      "*"
+    );
+  }
+
+  updatePadding(overlayId: string, textareaId: string): void {
+    if (!this.ready) {
+      console.warn("GramCheckProxy: Interface not ready");
+      return;
+    }
+
+    window.postMessage(
+      {
+        type: "GRAMCHECK_COMMAND",
+        command: "updatePadding",
+        args: [overlayId, textareaId],
+      },
+      "*"
+    );
   }
 }
+
+// Create our proxy
+const gramCheckProxy = new GramCheckProxy();
 
 // Load WASM module
 (async () => {
@@ -56,31 +126,32 @@ function injectPageScript(): Promise<void> {
   });
 }
 
-// Check for the interface with a timeout
-function waitForInterface(
-  maxWaitTime = 2000,
-  checkInterval = 50
-): Promise<void> {
+// Wait for the proxy to be ready
+function waitForProxyReady(maxWaitTime = 3000): Promise<void> {
   return new Promise((resolve, reject) => {
-    console.log("Waiting for gramCheckInterface to be available");
-    const startTime = Date.now();
-
-    function checkInterface() {
-      if (window.gramCheckInterface) {
-        console.log("gramCheckInterface is now available");
-        resolve();
-        return;
-      }
-
-      if (Date.now() - startTime > maxWaitTime) {
-        reject(new Error("Timeout waiting for gramCheckInterface"));
-        return;
-      }
-
-      setTimeout(checkInterface, checkInterval);
+    if (gramCheckProxy.isReady()) {
+      resolve();
+      return;
     }
 
-    checkInterface();
+    const startTime = Date.now();
+
+    // Set up the event listener
+    const listener = () => {
+      console.log("gramcheck-proxy-ready event received");
+      window.removeEventListener("gramcheck-proxy-ready", listener);
+      resolve();
+    };
+
+    window.addEventListener("gramcheck-proxy-ready", listener);
+
+    // Timeout if it takes too long
+    setTimeout(() => {
+      if (!gramCheckProxy.isReady()) {
+        window.removeEventListener("gramcheck-proxy-ready", listener);
+        reject(new Error("Timeout waiting for gramCheckProxy to be ready"));
+      }
+    }, maxWaitTime);
   });
 }
 
@@ -108,16 +179,8 @@ async function startExtension() {
     // Inject our script
     await injectPageScript();
 
-    // Set up a listener for when the page script is ready
-    const readyPromise = new Promise<void>((resolve) => {
-      window.addEventListener("gramcheck-ready", () => {
-        console.log("gramcheck-ready event received");
-        resolve();
-      });
-    });
-
-    // Wait for either the ready event or for the interface to be available
-    await Promise.race([readyPromise, waitForInterface()]);
+    // Wait for the proxy to be ready
+    await waitForProxyReady();
 
     // Initialize our overlay
     initializeOverlay();
@@ -126,12 +189,10 @@ async function startExtension() {
     // Try one more time with a delay as a last resort
     setTimeout(() => {
       console.log("Final attempt to initialize overlay");
-      if (window.gramCheckInterface) {
+      if (gramCheckProxy.isReady()) {
         initializeOverlay();
       } else {
-        console.error(
-          "Cannot initialize overlay: gramCheckInterface not available"
-        );
+        console.error("Cannot initialize overlay: proxy not ready");
       }
     }, 1000);
   }
@@ -141,10 +202,8 @@ function initializeOverlay(): void {
   console.log("Initializing overlay");
 
   // Safety check
-  if (!window.gramCheckInterface) {
-    console.error(
-      "Cannot initialize overlay: gramCheckInterface not available"
-    );
+  if (!gramCheckProxy.isReady()) {
+    console.error("Cannot initialize overlay: proxy not ready");
     return;
   }
 
@@ -185,9 +244,9 @@ function createOverlayForTextarea(textarea: HTMLTextAreaElement): void {
     backgroundColor: "rgba(0, 0, 255, 0.2)",
   };
 
-  // Create our overlay using the page context interface
+  // Create our overlay using the proxy
   try {
-    window.gramCheckInterface!.createOverlay(overlayId, styles as any);
+    gramCheckProxy.createOverlay(overlayId, styles as any);
     console.log("Overlay created successfully");
 
     // Set up event listeners
@@ -201,12 +260,7 @@ function createOverlayForTextarea(textarea: HTMLTextAreaElement): void {
     // Create a resize observer
     const resizeObserver = new ResizeObserver((entries) => {
       try {
-        if (window.gramCheckInterface) {
-          window.gramCheckInterface.updatePadding(
-            overlayId,
-            textarea.id || "text-input"
-          );
-        }
+        gramCheckProxy.updatePadding(overlayId, textarea.id || "text-input");
       } catch (e) {
         console.error("Error updating padding:", e);
       }
@@ -219,13 +273,13 @@ function createOverlayForTextarea(textarea: HTMLTextAreaElement): void {
 }
 
 function updateOverlay(overlayId: string, textarea: HTMLTextAreaElement): void {
-  if (!textarea || !window.gramCheckInterface) return;
+  if (!textarea || !gramCheckProxy.isReady()) return;
 
   const text = textarea.value;
   const errors = spellCheck(text);
 
   try {
-    window.gramCheckInterface.updateOverlay(overlayId, text, errors);
+    gramCheckProxy.updateOverlay(overlayId, text, errors);
   } catch (e) {
     console.error("Error updating overlay:", e);
   }
