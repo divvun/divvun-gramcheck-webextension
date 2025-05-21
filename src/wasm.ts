@@ -13,7 +13,7 @@ export const loadWasm = async () => {
     const wasmBuffer = await wasmResponse.arrayBuffer();
     
     // Initialize the WASM module
-    await jsModule.default(wasmBuffer);
+    await jsModule.default({ wasmBuffer });
     
     return jsModule;
   } catch (error) {
