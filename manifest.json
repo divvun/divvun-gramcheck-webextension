@@ -45,8 +45,6 @@
             "<all_urls>"
         ], 
         "resources": [
-            "src_wasm_index_js.js",
-            "*module.wasm",
             "wasm/*"
         ]
     }
