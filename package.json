@@ -1,9 +1,15 @@
 {
-  "name": "divvun-webextension-webpack",
+  "name": "divvun-gramcheck-webextension",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "clean": "rm -rf dist",
+    "clean-rust": "cd rust && cargo clean",
+    "clean-all": "npm run clean && npm run clean-rust",
+    "build": "webpack --config webpack.config.js",
+    "cb": "npm run clean && npm run build",
+    "ccb": "npm run clean-all && npm run build",
+    "watch": "webpack --config webpack.config.js --watch"
   },
   "keywords": [],
   "author": "",
