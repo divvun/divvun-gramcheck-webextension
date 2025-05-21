@@ -3,12 +3,9 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "clean": "rm -rf dist",
-    "clean-rust": "cd rust && cargo clean",
-    "clean-all": "npm run clean && npm run clean-rust",
+    "clean": "cd rust && cargo clean",
     "build": "webpack --config webpack.config.js",
     "cb": "npm run clean && npm run build",
-    "ccb": "npm run clean-all && npm run build",
     "watch": "webpack --config webpack.config.js --watch"
   },
   "keywords": [],
