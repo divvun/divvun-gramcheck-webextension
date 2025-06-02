@@ -1,16 +1,5 @@
 // Define the error interface in the page context
-interface GrammarError {
-  word: string;
-  start: number;
-  end: number;
-}
-
-// Define the interface for our global object
-interface GramCheckInterface {
-  createOverlay: (id: string, styles?: Partial<CSSStyleDeclaration>) => string;
-  updateOverlay: (id: string, text: string, errors: GrammarError[]) => void;
-  updatePadding: (overlayId: string, textareaId: string) => void;
-}
+import { GramCheckInterface, GrammarError } from "../types";
 
 export {};
 

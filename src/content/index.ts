@@ -1,15 +1,8 @@
 import { loadWasm } from "../wasm";
-import { GrammarError } from "../types";
+import { GrammarError, GramCheckInterface } from "../types";
 import browser from "webextension-polyfill";
 
 console.log("Content script loaded. Document readyState:", document.readyState);
-
-// Define interface for the window.gramCheckInterface that will be injected
-interface GramCheckInterface {
-  createOverlay: (id: string, styles?: Partial<CSSStyleDeclaration>) => string;
-  updateOverlay: (id: string, text: string, errors: GrammarError[]) => void;
-  updatePadding: (overlayId: string, textareaId: string) => void;
-}
 
 // This proxy will handle communication with the page script
 class GramCheckProxy implements GramCheckInterface {
