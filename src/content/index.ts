@@ -239,9 +239,8 @@ function createOverlayForTextarea(textarea: HTMLTextAreaElement): void {
     pointerEvents: "none",
     top: `${rect.bottom + 10}px`,
     left: `${rect.left + window.scrollX}px`,
-    width: `${rect.width}px`,
-    height: `${rect.height}px`,
     backgroundColor: "rgba(0, 0, 255, 0.2)",
+    ...getStyles(textarea),
   };
 
   // Create our overlay using the proxy
@@ -301,6 +300,36 @@ function spellCheck(text: string): GrammarError[] {
   });
   return errors;
 }
+
+function getStyles(source: HTMLTextAreaElement): Partial<CSSStyleDeclaration> {
+  const computedStyle = window.getComputedStyle(source);
+  const propertiesToCopy = [
+    "font",
+    "color",
+    "fontSize",
+    "fontFamily",
+    "fontWeight",
+    "lineHeight",
+    "letterSpacing",
+    "textTransform",
+    "paddingTop",
+    "paddingRight",
+    "paddingBottom",
+    "paddingLeft",
+    //"padding",
+    "border",
+    "boxSizing",
+    "width",
+    "height",
+  ];
+
+  var styles: Partial<CSSStyleDeclaration> = {};
+  propertiesToCopy.forEach((property) => {
+    styles[property as any] = computedStyle[property as any] || "";
+  });
+  return styles;
+}
+
 
 // Start the extension
 initializeExtension();
