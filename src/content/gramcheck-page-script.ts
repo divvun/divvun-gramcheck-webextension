@@ -11,6 +11,8 @@ declare global {
 }
 
 class GramCheckOverlay extends HTMLElement {
+  private currentLanguage: string = 'english';
+  
   constructor() {
     super();
 
@@ -52,17 +54,127 @@ class GramCheckOverlay extends HTMLElement {
             z-index: 1000;
             display: none;
           }
+          .language-button {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 32px;
+            height: 32px;
+            padding: 4px;
+            cursor: pointer;
+            pointer-events: auto;
+            z-index: 1000;
+          }
+          .language-button:hover {
+            background: #f5f5f5;
+          }
+          .language-button img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+          }
+          .language-popup {
+            position: absolute;
+            bottom: 45px;
+            right: 10px;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.15);
+            z-index: 1001;
+            display: none;
+            pointer-events: auto;
+            min-width: 120px;
+          }
+          .language-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+          }
+          .language-item {
+            padding: 8px 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+          }
+          .language-item:hover {
+            background: #f5f5f5;
+          }
+          .language-item.selected {
+            color: #0078D4;
+            font-weight: 500;
+          }
+          // .language-item.selected::after {
+          //   content: "✓";
+          //   margin-left: 8px;
+          // }
         `;
 
-    // Popup element
+    // Create language button
+    const languageButton = document.createElement("button");
+    languageButton.setAttribute("class", "language-button");
+    const buttonImg = document.createElement("img");
+    buttonImg.src = "https://raw.githubusercontent.com/divvun/divvun-gramcheck-web/refs/heads/master/google/assets/icon-48.png";
+    buttonImg.alt = "Language Settings";
+    languageButton.appendChild(buttonImg);
+
+    // Create language popup
+    const languagePopup = document.createElement("div");
+    languagePopup.setAttribute("class", "language-popup");
+    
+    const languageList = document.createElement("ul");
+    languageList.setAttribute("class", "language-list");
+    
+    const languages = ['English', 'Spanish', 'Italian'];
+    languages.forEach(lang => {
+      const li = document.createElement("li");
+      li.setAttribute("class", `language-item${lang.toLowerCase() === this.currentLanguage ? ' selected' : ''}`);
+      li.textContent = lang;
+      li.addEventListener("click", () => {
+        // Remove selected class from all items
+        languageList.querySelectorAll('.language-item').forEach(item => {
+          item.classList.remove('selected');
+        });
+        // Add selected class to clicked item
+        li.classList.add('selected');
+        this.currentLanguage = lang.toLowerCase();
+        languagePopup.style.display = "none";
+        // Dispatch event for language change
+        this.dispatchEvent(new CustomEvent('languageChange', {
+          detail: { language: this.currentLanguage }
+        }));
+      });
+      languageList.appendChild(li);
+    });
+    
+    languagePopup.appendChild(languageList);
+
+    // Language button click handler
+    languageButton.addEventListener("click", (event: Event) => {
+      event.stopPropagation();
+      languagePopup.style.display = languagePopup.style.display === "none" ? "block" : "none";
+    });
+
+    // Close popup when clicking outside
+    document.addEventListener("click", () => {
+      languagePopup.style.display = "none";
+    });
+
+    // Popup element for errors
     const popup = document.createElement("div");
     popup.setAttribute("class", "popup");
     popup.textContent = "Possible typo?";
 
-    // Append the overlay and styles to the Shadow DOM
+    // Append elements to the Shadow DOM
     shadow.appendChild(style);
     shadow.appendChild(overlay);
     shadow.appendChild(popup);
+    shadow.appendChild(languageButton);
+    shadow.appendChild(languagePopup);
 
     // Click handler for errors
     overlay.addEventListener("click", (event: Event) => {
