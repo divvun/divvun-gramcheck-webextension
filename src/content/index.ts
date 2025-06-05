@@ -1,24 +1,22 @@
 import { loadWasm } from "../wasm";
-import { GrammarError, GramCheckInterface } from "../types";
+import { GrammarError, PageScriptCommand, PageScriptInterface, PAGE_SCRIPT_READY_EVENT } from "../types";
 import browser from "webextension-polyfill";
 
 console.log("Content script loaded. Document readyState:", document.readyState);
 
+const PAGE_SCRIPT_PROXY_READY_EVENT = "PAGE_SCRIPT_PROXY_READY_EVENT";
+
 // This proxy will handle communication with the page script
-class GramCheckProxy implements GramCheckInterface {
+class PageScriptProxy implements PageScriptInterface {
   private ready: boolean = false;
 
   constructor() {
-    // Listen for messages from the page script
     window.addEventListener("message", (event) => {
-      // Make sure the message is from our page
       if (event.source !== window) return;
-
-      if (event.data && event.data.type === "GRAMCHECK_READY") {
+      if (event.data && event.data === PAGE_SCRIPT_READY_EVENT) {
         console.log("Content script received GRAMCHECK_READY");
         this.ready = true;
-        // Dispatch our own event for the content script
-        window.dispatchEvent(new CustomEvent("gramcheck-proxy-ready"));
+        window.dispatchEvent(new CustomEvent(PAGE_SCRIPT_PROXY_READY_EVENT));
       }
     });
   }
@@ -27,59 +25,52 @@ class GramCheckProxy implements GramCheckInterface {
     return this.ready;
   }
 
-  createOverlay(id: string, styles?: Partial<CSSStyleDeclaration>): string {
-    if (!this.ready) {
-      console.warn("GramCheckProxy: Interface not ready");
-      return "";
-    }
-
-    window.postMessage(
-      {
-        type: "GRAMCHECK_COMMAND",
-        command: "createOverlay",
-        args: [id, styles],
+  createOverlay(id: string, styles?: Partial<CSSStyleDeclaration>): void {
+    this.sendPageScriptCommand({
+      type: "createOverlay",
+      args: {
+        id,
+        styles: styles || {},
       },
-      "*"
-    );
-
-    return id;
+    });
   }
 
   updateOverlay(id: string, text: string, errors: GrammarError[]): void {
-    if (!this.ready) {
-      console.warn("GramCheckProxy: Interface not ready");
-      return;
-    }
-
-    window.postMessage(
-      {
-        type: "GRAMCHECK_COMMAND",
-        command: "updateOverlay",
-        args: [id, text, errors],
+    this.sendPageScriptCommand({
+      type: "updateOverlay",
+      args: {
+        id,
+        text,
+        errors,
       },
-      "*"
-    );
+    });
   }
 
   updatePadding(overlayId: string, textareaId: string): void {
+    this.sendPageScriptCommand({
+      type: "updatePadding",
+      args: {
+        overlayId,
+        textareaId,
+      },
+    });
+  }
+
+  private sendPageScriptCommand(command: PageScriptCommand): void {
     if (!this.ready) {
       console.warn("GramCheckProxy: Interface not ready");
       return;
     }
 
     window.postMessage(
-      {
-        type: "GRAMCHECK_COMMAND",
-        command: "updatePadding",
-        args: [overlayId, textareaId],
-      },
+      command,
       "*"
     );
   }
 }
 
 // Create our proxy
-const gramCheckProxy = new GramCheckProxy();
+const gramCheckProxy = new PageScriptProxy();
 
 // Load WASM module
 (async () => {
@@ -127,21 +118,19 @@ function waitForProxyReady(maxWaitTime = 3000): Promise<void> {
       return;
     }
 
-    const startTime = Date.now();
-
     // Set up the event listener
     const listener = () => {
-      console.log("gramcheck-proxy-ready event received");
-      window.removeEventListener("gramcheck-proxy-ready", listener);
+      console.log("PAGE_SCRIPT_PROXY_READY_EVENT received");
+      window.removeEventListener(PAGE_SCRIPT_PROXY_READY_EVENT, listener);
       resolve();
     };
 
-    window.addEventListener("gramcheck-proxy-ready", listener);
+    window.addEventListener(PAGE_SCRIPT_PROXY_READY_EVENT, listener);
 
     // Timeout if it takes too long
     setTimeout(() => {
       if (!gramCheckProxy.isReady()) {
-        window.removeEventListener("gramcheck-proxy-ready", listener);
+        window.removeEventListener(PAGE_SCRIPT_PROXY_READY_EVENT, listener);
         reject(new Error("Timeout waiting for gramCheckProxy to be ready"));
       }
     }, maxWaitTime);

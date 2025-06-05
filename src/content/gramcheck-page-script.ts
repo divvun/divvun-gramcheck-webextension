@@ -1,12 +1,12 @@
 // Define the error interface in the page context
-import { GramCheckInterface, GrammarError } from "../types";
+import { PageScriptInterface, GrammarError, PageScriptCommand, PAGE_SCRIPT_READY_EVENT } from "../types";
 
 export {};
 
 // Extend the Window interface to include our global variable
 declare global {
   interface Window {
-    gramCheckInterface: GramCheckInterface;
+    pageScriptInterface: PageScriptInterface;
   }
 }
 
@@ -148,7 +148,7 @@ class GramCheckOverlay extends HTMLElement {
 }
 
 // Define a global interface for content script to communicate with via window.postMessage
-window.gramCheckInterface = {
+window.pageScriptInterface = {
   createOverlay(id: string, styles?: Partial<CSSStyleDeclaration>): string {
     const overlay = document.createElement(
       "spell-check-overlay"
@@ -195,30 +195,31 @@ try {
 // Setup the message listener for communication with the content script
 window.addEventListener("message", (event) => {
   // Make sure the message is from our extension
-  if (event.data && event.data.type === "GRAMCHECK_COMMAND") {
-    console.log("Page script received message:", event.data);
-    const { command, args } = event.data;
+  if (event.source !== window || !event.data) return;
+  const { type, args } = event.data as PageScriptCommand;
+  if (!type || !args) return;
 
-    try {
-      // Execute the requested command
-      if (command === "createOverlay" && window.gramCheckInterface) {
-        const [id, styles] = args;
-        window.gramCheckInterface.createOverlay(id, styles);
-      } else if (command === "updateOverlay" && window.gramCheckInterface) {
-        const [id, text, errors] = args;
-        window.gramCheckInterface.updateOverlay(id, text, errors);
-      } else if (command === "updatePadding" && window.gramCheckInterface) {
-        const [overlayId, textareaId] = args;
-        window.gramCheckInterface.updatePadding(overlayId, textareaId);
-      }
-    } catch (error) {
-      console.error("Error executing command:", error);
+  try {
+    switch (type) {
+      case "createOverlay":
+        window.pageScriptInterface.createOverlay(args.id, args.styles);
+        break;
+      case "updateOverlay": 
+        window.pageScriptInterface.updateOverlay(args.id, args.text, args.errors);
+        break;
+      case "updatePadding":
+        window.pageScriptInterface.updatePadding(args.overlayId, args.textareaId);
+        break; 
+      default:
+        console.warn("Unknown command type:", type);
     }
+  } catch (error) {
+    console.error("Error executing command:", error);
   }
 });
 
-console.log("Interface ready:", !!window.gramCheckInterface);
+console.log("Interface ready:", !!window.pageScriptInterface);
 
 // Signal to the content script that our page script is ready
 console.log("Dispatching gramcheck-ready event");
-window.postMessage({ type: "GRAMCHECK_READY" }, "*");
+window.postMessage(PAGE_SCRIPT_READY_EVENT, "*");

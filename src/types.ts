@@ -4,8 +4,34 @@ export type GrammarError = {
   end: number;
 };
 
-export interface GramCheckInterface {
-  createOverlay: (id: string, styles?: Partial<CSSStyleDeclaration>) => string;
+export interface PageScriptInterface {
+  createOverlay: (id: string, styles?: Partial<CSSStyleDeclaration>) => void;
   updateOverlay: (id: string, text: string, errors: GrammarError[]) => void;
   updatePadding: (overlayId: string, textareaId: string) => void;
 }
+
+export const PAGE_SCRIPT_READY_EVENT = "PAGE_SCRIPT_READY_EVENT";
+
+export type PageScriptCommand = 
+| {
+  type: "createOverlay";
+  args: {
+    id: string;
+    styles?: Partial<CSSStyleDeclaration>;
+  }
+}
+| {
+  type: "updateOverlay";
+  args: {
+    id: string;
+    text: string;
+    errors: GrammarError[];
+  }
+}
+| {
+  type: "updatePadding";
+  args: {
+    overlayId: string;
+    textareaId: string;
+  }
+};
