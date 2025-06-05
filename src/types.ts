@@ -4,7 +4,7 @@ export type GrammarError = {
   end: number;
 };
 
-export const PAGE_SCRIPT_READY_EVENT = "PAGE_SCRIPT_READY_EVENT";
+export const PAGE_SCRIPT_READY = "PAGE_SCRIPT_READY";
 
 // Interface for interacting with the page script from the content script
 export interface PageScriptInterface {

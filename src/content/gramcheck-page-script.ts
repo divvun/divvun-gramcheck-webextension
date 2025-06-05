@@ -1,5 +1,5 @@
 // Define the error interface in the page context
-import { PageScriptInterface, GrammarError, PageScriptCommand, PAGE_SCRIPT_READY_EVENT } from "../types";
+import { PageScriptInterface, GrammarError, PageScriptCommand, PAGE_SCRIPT_READY } from "../types";
 
 export {};
 
@@ -194,7 +194,6 @@ try {
 
 // Setup the message listener for communication with the content script
 window.addEventListener("message", (event) => {
-  // Make sure the message is from our extension
   if (event.source !== window || !event.data) return;
   const { type, args } = event.data as PageScriptCommand;
   if (!type || !args) return;
@@ -218,8 +217,4 @@ window.addEventListener("message", (event) => {
   }
 });
 
-console.log("Interface ready:", !!window.pageScriptInterface);
-
-// Signal to the content script that our page script is ready
-console.log("Dispatching gramcheck-ready event");
-window.postMessage(PAGE_SCRIPT_READY_EVENT, "*");
+window.postMessage(PAGE_SCRIPT_READY, "*");

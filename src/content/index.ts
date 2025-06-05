@@ -1,5 +1,5 @@
 import { loadWasm } from "../wasm";
-import { GrammarError, PageScriptCommand, PageScriptInterface, PAGE_SCRIPT_READY_EVENT } from "../types";
+import { GrammarError, PageScriptCommand, PageScriptInterface, PAGE_SCRIPT_READY } from "../types";
 import browser from "webextension-polyfill";
 
 console.log("Content script loaded. Document readyState:", document.readyState);
@@ -13,7 +13,7 @@ class PageScriptRPC implements PageScriptInterface {
   constructor() {
     window.addEventListener("message", (event) => {
       if (event.source !== window) return;
-      if (event.data && event.data === PAGE_SCRIPT_READY_EVENT) {
+      if (event.data && event.data === PAGE_SCRIPT_READY) {
         console.log("Content script received GRAMCHECK_READY");
         this.ready = true;
         window.dispatchEvent(new CustomEvent(PAGE_SCRIPT_PROXY_READY_EVENT));
