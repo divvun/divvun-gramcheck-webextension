@@ -7,7 +7,7 @@ console.log("Content script loaded. Document readyState:", document.readyState);
 const PAGE_SCRIPT_PROXY_READY_EVENT = "PAGE_SCRIPT_PROXY_READY_EVENT";
 
 // This proxy will handle communication with the page script
-class PageScriptProxy implements PageScriptInterface {
+class PageScriptRPC implements PageScriptInterface {
   private ready: boolean = false;
 
   constructor() {
@@ -69,8 +69,7 @@ class PageScriptProxy implements PageScriptInterface {
   }
 }
 
-// Create our proxy
-const gramCheckProxy = new PageScriptProxy();
+const pageScriptRPC = new PageScriptRPC();
 
 // Load WASM module
 (async () => {
@@ -113,7 +112,7 @@ function injectPageScript(): Promise<void> {
 // Wait for the proxy to be ready
 function waitForProxyReady(maxWaitTime = 3000): Promise<void> {
   return new Promise((resolve, reject) => {
-    if (gramCheckProxy.isReady()) {
+    if (pageScriptRPC.isReady()) {
       resolve();
       return;
     }
@@ -129,7 +128,7 @@ function waitForProxyReady(maxWaitTime = 3000): Promise<void> {
 
     // Timeout if it takes too long
     setTimeout(() => {
-      if (!gramCheckProxy.isReady()) {
+      if (!pageScriptRPC.isReady()) {
         window.removeEventListener(PAGE_SCRIPT_PROXY_READY_EVENT, listener);
         reject(new Error("Timeout waiting for gramCheckProxy to be ready"));
       }
@@ -171,7 +170,7 @@ async function startExtension() {
     // Try one more time with a delay as a last resort
     setTimeout(() => {
       console.log("Final attempt to initialize overlay");
-      if (gramCheckProxy.isReady()) {
+      if (pageScriptRPC.isReady()) {
         initializeOverlay();
       } else {
         console.error("Cannot initialize overlay: proxy not ready");
@@ -184,7 +183,7 @@ function initializeOverlay(): void {
   console.log("Initializing overlay");
 
   // Safety check
-  if (!gramCheckProxy.isReady()) {
+  if (!pageScriptRPC.isReady()) {
     console.error("Cannot initialize overlay: proxy not ready");
     return;
   }
@@ -227,7 +226,7 @@ function createOverlayForTextarea(textarea: HTMLTextAreaElement): void {
 
   // Create our overlay using the proxy
   try {
-    gramCheckProxy.createOverlay(overlayId, styles as any);
+    pageScriptRPC.createOverlay(overlayId, styles as any);
     console.log("Overlay created successfully");
 
     // Set up event listeners
@@ -241,7 +240,7 @@ function createOverlayForTextarea(textarea: HTMLTextAreaElement): void {
     // Create a resize observer
     const resizeObserver = new ResizeObserver((entries) => {
       try {
-        gramCheckProxy.updatePadding(overlayId, textarea.id || "text-input");
+        pageScriptRPC.updatePadding(overlayId, textarea.id || "text-input");
       } catch (e) {
         console.error("Error updating padding:", e);
       }
@@ -254,13 +253,13 @@ function createOverlayForTextarea(textarea: HTMLTextAreaElement): void {
 }
 
 function updateOverlay(overlayId: string, textarea: HTMLTextAreaElement): void {
-  if (!textarea || !gramCheckProxy.isReady()) return;
+  if (!textarea || !pageScriptRPC.isReady()) return;
 
   const text = textarea.value;
   const errors = spellCheck(text);
 
   try {
-    gramCheckProxy.updateOverlay(overlayId, text, errors);
+    pageScriptRPC.updateOverlay(overlayId, text, errors);
   } catch (e) {
     console.error("Error updating overlay:", e);
   }

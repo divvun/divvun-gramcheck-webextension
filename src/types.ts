@@ -4,13 +4,14 @@ export type GrammarError = {
   end: number;
 };
 
+export const PAGE_SCRIPT_READY_EVENT = "PAGE_SCRIPT_READY_EVENT";
+
+// Interface for interacting with the page script from the content script
 export interface PageScriptInterface {
   createOverlay: (id: string, styles?: Partial<CSSStyleDeclaration>) => void;
   updateOverlay: (id: string, text: string, errors: GrammarError[]) => void;
   updatePadding: (overlayId: string, textareaId: string) => void;
 }
-
-export const PAGE_SCRIPT_READY_EVENT = "PAGE_SCRIPT_READY_EVENT";
 
 export type PageScriptCommand = 
 | {
