@@ -5,3 +5,4 @@
 - [ ] Add settings to overlay for which language to use
 - [ ] Factor out args from PageScriptInterface and use parameter type to determine which command is being sent -- what happens if two functions share the same parameters?
 - [ ] Add Divvun API integration for running grammar checks
+- [ ] Test overlay with https://languagetool.org/webextension/welcome/finish?lang=en
