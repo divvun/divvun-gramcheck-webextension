@@ -1,6 +1,6 @@
 // Define the error interface in the page context
 import { PageScriptInterface, GrammarError, PageScriptCommand, PAGE_SCRIPT_READY } from "../types";
-import { apiRequestGrammarCheck } from "./utils/api";
+import { apiRequestGrammarCheck, apiRequestLanguageOptions } from "./utils/api";
 
 export {};
 
@@ -159,6 +159,11 @@ class GramCheckOverlay extends HTMLElement {
       const response = await apiRequestGrammarCheck("hello this is some test text", "se");
       console.log("  RESPONISE ");
       console.log(response);
+
+      const langs = await apiRequestLanguageOptions();
+      console.log("languages:")
+      console.log(langs)
+
       event.stopPropagation();
       languagePopup.style.display = languagePopup.style.display === "none" ? "block" : "none";
     });

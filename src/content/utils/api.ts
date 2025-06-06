@@ -91,7 +91,7 @@ export interface LanguageOptions {
 
 export async function apiRequestLanguageOptions(): Promise<LanguageOptions> {
     return apiRequest({
-        url: `${apiUrl}languages`,
+        url: `${apiUrl}languages/`,
         method: 'GET',
     });
 }
