@@ -9,6 +9,8 @@ export class OverlayManager {
     private popup: HTMLDivElement;
     private languagePopup: HTMLDivElement;
     private onLanguageChange?: (language: string) => void;
+    private currentTextarea: HTMLTextAreaElement | null = null;
+    private handleScroll = () => {};  // Will be replaced with actual scroll handler
 
     constructor() {
         // Create container for overlay with improved initial styles
@@ -62,8 +64,6 @@ export class OverlayManager {
                 padding: 0 !important; /* Override any padding from textarea */
             }
             .gramcheck-content {
-                width: 100%;
-                height: 100%;
                 background-color: rgba(255, 255, 255, 0.8);
                 box-sizing: border-box;
             }
@@ -293,9 +293,12 @@ export class OverlayManager {
         // Apply textarea styles to overlay
         Object.assign(this.overlay.style, styles);
         
-        // Apply padding to content container instead of overlay
+        // Apply padding and scroll styles to content container
         const computedStyle = window.getComputedStyle(textarea);
         this.overlayContent.style.padding = computedStyle.padding;
+        
+        // Set up scroll syncing for the new textarea
+        this.setupScrollSync(textarea);
 
         // Set specific overlay positioning and appearance
         this.overlay.style.position = "absolute";
@@ -312,6 +315,26 @@ export class OverlayManager {
         // this.overlay.style.border = "1px solid #ccc"; // Add a light border
         // this.overlay.style.boxShadow = "0 2px 6px rgba(0,0,0,0.15)"; // Add subtle shadow
         // this.overlay.style.zIndex = "1000"; // Ensure overlay appears above other content
+    }
+
+    private setupScrollSync(textarea: HTMLTextAreaElement): void {
+        // Remove old scroll listener if it exists
+        if (this.currentTextarea) {
+            this.currentTextarea.removeEventListener('scroll', this.handleScroll);
+        }
+
+        // Set up new scroll listener
+        this.currentTextarea = textarea;
+        this.handleScroll = () => {
+            if (this.currentTextarea) {
+                this.overlayContent.style.transform = `translateY(-${this.currentTextarea.scrollTop}px)`;
+            }
+        };
+        
+        textarea.addEventListener('scroll', this.handleScroll);
+        
+        // Initial sync
+        this.handleScroll();
     }
 
     public setLanguageChangeHandler(handler: (language: string) => void): void {
