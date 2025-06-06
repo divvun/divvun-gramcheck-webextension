@@ -47,8 +47,8 @@
         ], 
         "resources": [
             "wasm/*",
-            "gramcheck-page-script.js",
-            "*.map"
+            "*.map",
+            "icons/*.png"
         ]
     }
 ]
