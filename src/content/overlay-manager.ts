@@ -14,6 +14,11 @@ export class OverlayManager {
         this.overlay = document.createElement("div");
         this.overlay.className = "gramcheck-overlay";
         
+        // Create a content container for the text
+        const contentContainer = document.createElement("div");
+        contentContainer.className = "gramcheck-content";
+        this.overlay.appendChild(contentContainer);
+        
         // Create style element
         const style = document.createElement("style");
         style.textContent = this.getStylesheet();
@@ -35,10 +40,10 @@ export class OverlayManager {
         // Set up event handlers
         this.setupEventHandlers(languageButton);
 
-        // Append elements to document with proper z-index stacking
+        // Append elements with proper z-index stacking
         document.body.appendChild(this.overlay);
         document.body.appendChild(this.popup);
-        document.body.appendChild(languageButton);
+        this.overlay.appendChild(languageButton); // Append button to overlay instead of body
         document.body.appendChild(this.languagePopup);
 
         // Initialize overlays with display: none
@@ -50,15 +55,13 @@ export class OverlayManager {
         return `
             .gramcheck-overlay {
                 position: absolute;
-                // width: 100%;
-                // min-height: 100px;
-                // font-size: inherit;
-                // line-height: inherit;
-                // white-space: pre-wrap;
-                // pointer-events: none;
                 background-color: rgba(0, 0, 255, 0.2);
-                // margin-top: 10px;
-                // padding: inherit;
+                overflow: hidden;
+            }
+            .gramcheck-content {
+                // width: 100%;
+                // height: 100%;
+                background-color: rgba(255, 255, 255, 0.8);
             }
             .gramcheck-error {
                 text-decoration: underline;
@@ -224,7 +227,10 @@ export class OverlayManager {
             highlightedText = before + errorWord + after;
         });
 
-        this.overlay.innerHTML = highlightedText.replace(/\n/g, "<br>");
+        const contentContainer = this.overlay.querySelector('.gramcheck-content');
+        if (contentContainer) {
+            contentContainer.innerHTML = highlightedText.replace(/\n/g, "<br>");
+        }
     }
 
     private getStyles(source: HTMLTextAreaElement): Partial<CSSStyleDeclaration> {
@@ -242,7 +248,7 @@ export class OverlayManager {
           "paddingRight",
           "paddingBottom",
           "paddingLeft",
-          //"padding",
+          "padding",
           "border",
           "boxSizing",
           "width",
@@ -307,14 +313,6 @@ export class OverlayManager {
         // this.overlay.style.border = "1px solid #ccc"; // Add a light border
         // this.overlay.style.boxShadow = "0 2px 6px rgba(0,0,0,0.15)"; // Add subtle shadow
         // this.overlay.style.zIndex = "1000"; // Ensure overlay appears above other content
-
-        // Position language button and popup relative to overlay
-        const languageButton = document.querySelector(".gramcheck-language-button") as HTMLButtonElement;
-        if (languageButton) {
-            languageButton.style.position = "absolute";
-            languageButton.style.right = "10px";
-            languageButton.style.bottom = `${rect.height + 20}px`;
-        }
     }
 
     public setLanguageChangeHandler(handler: (language: string) => void): void {
