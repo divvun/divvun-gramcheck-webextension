@@ -5,6 +5,7 @@ import browser from "webextension-polyfill";
 export class OverlayManager {
     private currentLanguage: string = 'english';
     private overlay: HTMLDivElement;
+    private overlayContent: HTMLDivElement;
     private popup: HTMLDivElement;
     private languagePopup: HTMLDivElement;
     private onLanguageChange?: (language: string) => void;
@@ -15,9 +16,9 @@ export class OverlayManager {
         this.overlay.className = "gramcheck-overlay";
         
         // Create a content container for the text
-        const contentContainer = document.createElement("div");
-        contentContainer.className = "gramcheck-content";
-        this.overlay.appendChild(contentContainer);
+        this.overlayContent = document.createElement("div");
+        this.overlayContent.className = "gramcheck-content";
+        this.overlay.appendChild(this.overlayContent);
         
         // Create style element
         const style = document.createElement("style");
@@ -57,11 +58,14 @@ export class OverlayManager {
                 position: absolute;
                 background-color: rgba(0, 0, 255, 0.2);
                 overflow: hidden;
+                box-sizing: border-box;
+                padding: 0 !important; /* Override any padding from textarea */
             }
             .gramcheck-content {
-                // width: 100%;
-                // height: 100%;
+                width: 100%;
+                height: 100%;
                 background-color: rgba(255, 255, 255, 0.8);
+                box-sizing: border-box;
             }
             .gramcheck-error {
                 text-decoration: underline;
@@ -227,10 +231,7 @@ export class OverlayManager {
             highlightedText = before + errorWord + after;
         });
 
-        const contentContainer = this.overlay.querySelector('.gramcheck-content');
-        if (contentContainer) {
-            contentContainer.innerHTML = highlightedText.replace(/\n/g, "<br>");
-        }
+        this.overlayContent.innerHTML = highlightedText.replace(/\n/g, "<br>");
     }
 
     private getStyles(source: HTMLTextAreaElement): Partial<CSSStyleDeclaration> {
@@ -244,13 +245,7 @@ export class OverlayManager {
           "lineHeight",
           "letterSpacing",
           "textTransform",
-          "paddingTop",
-          "paddingRight",
-          "paddingBottom",
-          "paddingLeft",
-          "padding",
           "border",
-          "boxSizing",
           "width",
           "height",
           // // Font properties
@@ -297,6 +292,10 @@ export class OverlayManager {
 
         // Apply textarea styles to overlay
         Object.assign(this.overlay.style, styles);
+        
+        // Apply padding to content container instead of overlay
+        const computedStyle = window.getComputedStyle(textarea);
+        this.overlayContent.style.padding = computedStyle.padding;
 
         // Set specific overlay positioning and appearance
         this.overlay.style.position = "absolute";
