@@ -1,5 +1,6 @@
 // Define the error interface in the page context
 import { PageScriptInterface, GrammarError, PageScriptCommand, PAGE_SCRIPT_READY } from "../types";
+import { apiRequestGrammarCheck } from "./utils/api";
 
 export {};
 
@@ -154,7 +155,10 @@ class GramCheckOverlay extends HTMLElement {
     languagePopup.appendChild(languageList);
 
     // Language button click handler
-    languageButton.addEventListener("click", (event: Event) => {
+    languageButton.addEventListener("click", async (event: Event) => {
+      const response = await apiRequestGrammarCheck("hello this is some test text", "se");
+      console.log("  RESPONISE ");
+      console.log(response);
       event.stopPropagation();
       languagePopup.style.display = languagePopup.style.display === "none" ? "block" : "none";
     });
