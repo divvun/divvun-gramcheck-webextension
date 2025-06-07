@@ -1,5 +1,5 @@
 import { GrammarError } from "../types";
-import { apiRequestLanguageOptions } from "./utils/api";
+import { apiRequestLanguageOptions, apiRequestGrammarCheck } from "./utils/api";
 import browser from "webextension-polyfill";
 
 interface LanguageChoice {
@@ -16,11 +16,17 @@ export class OverlayManager {
     private onLanguageChange?: (language: string) => void;
     private currentTextarea: HTMLTextAreaElement | null = null;
     private handleScroll = () => {};  // Will be replaced with actual scroll handler
+    private languageButton: HTMLButtonElement;
+    private loadingSpinner: HTMLDivElement;
+    private typingTimer: ReturnType<typeof setTimeout> | null = null;
 
     constructor() {
         // Create container for overlay with improved initial styles
         this.overlay = document.createElement("div");
         this.overlay.className = "gramcheck-overlay";
+        
+        // Create loading spinner
+        this.loadingSpinner = this.createLoadingSpinner();
         
         // Create a content container for the text
         this.overlayContent = document.createElement("div");
@@ -41,7 +47,7 @@ export class OverlayManager {
         this.languagePopup = document.createElement("div");
         this.languagePopup.className = "gramcheck-language-popup";
         
-        const languageButton = this.createLanguageButton();
+        this.languageButton = this.createLanguageButton();
         
         // Create empty list and keep a reference to it
         const languageList = document.createElement("ul");
@@ -52,12 +58,13 @@ export class OverlayManager {
         this.populateLanguageList(languageList);
 
         // Set up event handlers
-        this.setupEventHandlers(languageButton);
+        this.setupEventHandlers(this.languageButton);
 
         // Append elements with proper z-index stacking
         document.body.appendChild(this.overlay);
         document.body.appendChild(this.popup);
-        this.overlay.appendChild(languageButton); // Append button to overlay instead of body
+        this.overlay.appendChild(this.languageButton); // Append button to overlay instead of body
+        this.overlay.appendChild(this.loadingSpinner); // Add the loading spinner
         document.body.appendChild(this.languagePopup);
 
         // Initialize overlays with display: none
@@ -65,8 +72,34 @@ export class OverlayManager {
         this.languagePopup.style.display = "none";
     }
 
+    private createLoadingSpinner(): HTMLDivElement {
+        const spinner = document.createElement('div');
+        spinner.className = 'gramcheck-spinner';
+        spinner.style.display = 'none';
+        return spinner;
+    }
+
     private getStylesheet(): string {
         return `
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+            
+            .gramcheck-spinner {
+                width: 32px;
+                height: 32px;
+                position: absolute;
+                bottom: 10px;
+                right: 10px;
+                border: 3px solid rgba(0, 0, 0, 0.1);
+                border-radius: 50%;
+                border-top: 3px solid #0078D4;
+                animation: spin 1s linear infinite;
+                z-index: 1000;
+                box-sizing: border-box;
+            }
+            
             .gramcheck-overlay {
                 position: absolute;
                 background-color: rgba(0, 0, 255, 0.2);
@@ -312,8 +345,8 @@ export class OverlayManager {
         const computedStyle = window.getComputedStyle(textarea);
         this.overlayContent.style.padding = computedStyle.padding;
         
-        // Set up scroll syncing for the new textarea
-        this.setupScrollSync(textarea);
+        // Set up textarea event handlers
+        this.setupTextareaHandlers(textarea);
 
         // Set specific overlay positioning and appearance
         this.overlay.style.position = "absolute";
@@ -332,12 +365,25 @@ export class OverlayManager {
         // this.overlay.style.zIndex = "1000"; // Ensure overlay appears above other content
     }
 
+    private async checkGrammar(text: string): Promise<void> {
+        try {
+            const result = await apiRequestGrammarCheck(text, this.currentLanguage);
+            console.log('Grammar check result:', result);
+        } catch (error) {
+            console.error('Grammar check failed:', error);
+        } finally {
+            // Hide spinner and show button
+            this.loadingSpinner.style.display = 'none';
+            this.languageButton.style.display = 'block';
+        }
+    }
+
     public setLanguageChangeHandler(handler: (language: string) => void): void {
         this.onLanguageChange = handler;
     }
 
-    private setupScrollSync(textarea: HTMLTextAreaElement): void {
-        // Remove old scroll listener if it exists
+    private setupTextareaHandlers(textarea: HTMLTextAreaElement): void {
+        // Remove old listeners if they exist
         if (this.currentTextarea) {
             this.currentTextarea.removeEventListener('scroll', this.handleScroll);
         }
@@ -350,7 +396,27 @@ export class OverlayManager {
             }
         };
         
+        // Set up input handler with debounce
+        const handleInput = () => {
+            // Show spinner and hide button
+            this.loadingSpinner.style.display = 'block';
+            this.languageButton.style.display = 'none';
+
+            // Clear previous timer
+            if (this.typingTimer) {
+                clearTimeout(this.typingTimer);
+            }
+
+            // Set new timer
+            this.typingTimer = setTimeout(() => {
+                if (this.currentTextarea) {
+                    this.checkGrammar(this.currentTextarea.value);
+                }
+            }, 1000); // 1 second delay
+        };
+
         textarea.addEventListener('scroll', this.handleScroll);
+        textarea.addEventListener('input', handleInput);
         
         // Initial sync
         this.handleScroll();
