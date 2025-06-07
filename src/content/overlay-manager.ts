@@ -2,29 +2,25 @@ import { GrammarError } from "../types";
 import { apiRequestLanguageOptions } from "./utils/api";
 import browser from "webextension-polyfill";
 
-interface LanguageInfo {
+interface LanguageChoice {
     code: string;
     displayName: string;
 }
 
 export class OverlayManager {
-    private currentLanguage: string = 'se';
+    private currentLanguage: string = 'se';  // Set default language to 'se'
     private overlay: HTMLDivElement;
     private overlayContent: HTMLDivElement;
     private popup: HTMLDivElement;
     private languagePopup: HTMLDivElement;
     private onLanguageChange?: (language: string) => void;
     private currentTextarea: HTMLTextAreaElement | null = null;
-    private availableLanguages: LanguageInfo[] = [];
     private handleScroll = () => {};  // Will be replaced with actual scroll handler
 
     constructor() {
         // Create container for overlay with improved initial styles
         this.overlay = document.createElement("div");
         this.overlay.className = "gramcheck-overlay";
-        
-        // Load available languages
-        this.loadAvailableLanguages();
         
         // Create a content container for the text
         this.overlayContent = document.createElement("div");
@@ -46,8 +42,14 @@ export class OverlayManager {
         this.languagePopup.className = "gramcheck-language-popup";
         
         const languageButton = this.createLanguageButton();
-        const languageList = this.createLanguageList();
+        
+        // Create empty list and keep a reference to it
+        const languageList = document.createElement("ul");
+        languageList.className = "gramcheck-language-list";
         this.languagePopup.appendChild(languageList);
+        
+        // Populate the list asynchronously
+        this.populateLanguageList(languageList);
 
         // Set up event handlers
         this.setupEventHandlers(languageButton);
@@ -163,11 +165,26 @@ export class OverlayManager {
         return languageButton;
     }
 
-    private createLanguageList(): HTMLUListElement {
-        const languageList = document.createElement("ul");
-        languageList.className = "gramcheck-language-list";
-        // The list will be populated in loadAvailableLanguages()
-        return languageList;
+    private async populateLanguageList(languageList: HTMLUListElement): Promise<void> {
+        try {
+            const response = await apiRequestLanguageOptions();
+            const availableLanguages = Object.entries(response.available.grammar).map(([code, name]): LanguageChoice => ({
+                code,
+                displayName: name
+            }));
+            
+            // Populate the list
+            availableLanguages.forEach(lang => {
+                const li = document.createElement("li");
+                li.className = `gramcheck-language-item${lang.code === this.currentLanguage ? ' selected' : ''}`;
+                li.textContent = lang.displayName;
+                li.dataset.code = lang.code;
+                li.addEventListener("click", () => this.handleLanguageSelect(li, lang.code, languageList));
+                languageList.appendChild(li);
+            });
+        } catch (error) {
+            console.error("Failed to load available languages:", error);
+        }
     }
 
     private handleLanguageSelect(li: HTMLLIElement, langCode: string, languageList: HTMLUListElement): void {
@@ -315,6 +332,10 @@ export class OverlayManager {
         // this.overlay.style.zIndex = "1000"; // Ensure overlay appears above other content
     }
 
+    public setLanguageChangeHandler(handler: (language: string) => void): void {
+        this.onLanguageChange = handler;
+    }
+
     private setupScrollSync(textarea: HTMLTextAreaElement): void {
         // Remove old scroll listener if it exists
         if (this.currentTextarea) {
@@ -335,33 +356,4 @@ export class OverlayManager {
         this.handleScroll();
     }
 
-    public setLanguageChangeHandler(handler: (language: string) => void): void {
-        this.onLanguageChange = handler;
-    }
-
-    private async loadAvailableLanguages(): Promise<void> {
-        try {
-            const response = await apiRequestLanguageOptions();
-            this.availableLanguages = Object.entries(response.available.grammar).map(([code, name]) => ({
-                code,
-                displayName: name
-            }));
-            
-            // Update the language list UI
-            const languageList = this.languagePopup.querySelector('.gramcheck-language-list');
-            if (languageList) {
-                languageList.innerHTML = ''; // Clear existing items
-                this.availableLanguages.forEach(lang => {
-                    const li = document.createElement("li");
-                    li.className = `gramcheck-language-item${lang.code === this.currentLanguage ? ' selected' : ''}`;
-                    li.textContent = lang.displayName;
-                    li.dataset.code = lang.code;
-                    li.addEventListener("click", () => this.handleLanguageSelect(li, lang.code, languageList as HTMLUListElement));
-                    languageList.appendChild(li);
-                });
-            }
-        } catch (error) {
-            console.error("Failed to load available languages:", error);
-        }
-    }
 }
