@@ -18,6 +18,7 @@ export class OverlayManager {
     private languageButton: HTMLButtonElement;
     private loadingSpinner: HTMLDivElement;
     private typingTimer: ReturnType<typeof setTimeout> | null = null;
+    private errorMap: Map<string, APIGrammarError> = new Map();
 
     constructor() {
         // Create container for overlay with improved initial styles
@@ -40,6 +41,48 @@ export class OverlayManager {
         // Create error popup with improved styling
         this.popup = document.createElement("div");
         this.popup.className = "gramcheck-popup";
+        
+        // Create popup structure
+        const titleBar = document.createElement("div");
+        titleBar.className = "gramcheck-popup-title";
+        
+        const logo = document.createElement("img");
+        logo.src = browser.runtime.getURL('icons/icon-32.png');
+        logo.alt = "Divvun Logo";
+        logo.className = "gramcheck-popup-logo";
+        titleBar.appendChild(logo);
+        
+        const title = document.createElement("span");
+        title.textContent = "Divvun Grammar Checker";
+        title.className = "gramcheck-popup-title-text";
+        titleBar.appendChild(title);
+        
+        const closeButton = document.createElement("button");
+        closeButton.innerHTML = "×";
+        closeButton.className = "gramcheck-popup-close";
+        closeButton.addEventListener("click", (e) => {
+            e.stopPropagation();
+            this.popup.style.display = "none";
+        });
+        titleBar.appendChild(closeButton);
+        
+        const content = document.createElement("div");
+        content.className = "gramcheck-popup-content";
+        
+        const errorTitle = document.createElement("div");
+        errorTitle.className = "gramcheck-popup-error-title";
+        content.appendChild(errorTitle);
+        
+        const errorDescription = document.createElement("div");
+        errorDescription.className = "gramcheck-popup-error-description";
+        content.appendChild(errorDescription);
+        
+        const suggestionsList = document.createElement("div");
+        suggestionsList.className = "gramcheck-popup-suggestions";
+        content.appendChild(suggestionsList);
+        
+        this.popup.appendChild(titleBar);
+        this.popup.appendChild(content);
 
         // Create language selection elements
         this.languagePopup = document.createElement("div");
@@ -120,10 +163,86 @@ export class OverlayManager {
                 position: absolute;
                 background: white;
                 border: 1px solid #ccc;
-                padding: 4px 8px;
+                border-radius: 4px;
                 box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.15);
                 z-index: 1000;
                 display: none;
+                min-width: 300px;
+                max-width: 400px;
+            }
+            
+            .gramcheck-popup-title {
+                display: flex;
+                align-items: center;
+                background: #f5f5f5;
+                padding: 8px;
+                border-bottom: 1px solid #eee;
+                border-radius: 4px 4px 0 0;
+            }
+            
+            .gramcheck-popup-logo {
+                width: 20px;
+                height: 20px;
+                margin-right: 8px;
+            }
+            
+            .gramcheck-popup-title-text {
+                flex-grow: 1;
+                font-weight: 500;
+                font-size: 14px;
+                color: #333;
+            }
+            
+            .gramcheck-popup-close {
+                background: none;
+                border: none;
+                font-size: 20px;
+                color: #666;
+                cursor: pointer;
+                padding: 0 4px;
+                line-height: 1;
+            }
+            
+            .gramcheck-popup-close:hover {
+                color: #333;
+            }
+            
+            .gramcheck-popup-content {
+                padding: 12px;
+            }
+            
+            .gramcheck-popup-error-title {
+                font-weight: 500;
+                color: #333;
+                margin-bottom: 8px;
+            }
+            
+            .gramcheck-popup-error-description {
+                color: #666;
+                margin-bottom: 12px;
+                line-height: 1.4;
+            }
+            
+            .gramcheck-popup-suggestions {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+                align-items: flex-start;
+            }
+            
+            .gramcheck-popup-suggestion {
+                background: #0078D4;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                padding: 4px 8px;
+                cursor: pointer;
+                font-size: 13px;
+                line-height: 1.4;
+            }
+            
+            .gramcheck-popup-suggestion:hover {
+                background: #006bbe;
             }
             .gramcheck-language-button {
                 position: absolute;
@@ -182,6 +301,66 @@ export class OverlayManager {
             .gramcheck-language-item.selected::after {
                 content: "✓";
                 margin-left: 8px;
+            }
+
+            .gramcheck-popup-title {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 8px;
+                background: #f5f5f5;
+                color: #333;
+                border-top-left-radius: 4px;
+                border-top-right-radius: 4px;
+                border-bottom: 1px solid #eee;
+            }
+            .gramcheck-popup-logo {
+                width: 24px;
+                height: 24px;
+                margin-right: 8px;
+            }
+            .gramcheck-popup-title-text {
+                font-size: 14px;
+                font-weight: 500;
+            }
+            .gramcheck-popup-close {
+                background: none;
+                border: none;
+                color: #666;
+                font-size: 20px;
+                cursor: pointer;
+                padding: 0 4px;
+            }
+            .gramcheck-popup-content {
+                padding: 8px;
+                max-height: 200px;
+                overflow-y: auto;
+            }
+            .gramcheck-popup-error-title {
+                font-weight: 500;
+                margin-bottom: 4px;
+            }
+            .gramcheck-popup-error-description {
+                margin-bottom: 8px;
+            }
+            .gramcheck-popup-suggestions {
+                display: flex;
+                flex-direction: row;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+            .gramcheck-popup-suggestion {
+                background: #0078D4;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                padding: 4px 8px;
+                cursor: pointer;
+                font-size: 13px;
+                line-height: 1.4;
+            }
+            .gramcheck-popup-suggestion:hover {
+                background: #006bbe;
             }
         `;
     }
@@ -248,13 +427,19 @@ export class OverlayManager {
 
             if (targetElement.classList.contains("gramcheck-error")) {
                 const errorSpan = targetElement as HTMLSpanElement;
-                const errorMessage = decodeURIComponent(errorSpan.dataset.error || '');
-                if (errorMessage) {
-                    this.popup.textContent = errorMessage;
-                    const rect = targetElement.getBoundingClientRect();
-                    this.popup.style.left = `${rect.left}px`;
-                    this.popup.style.top = `${rect.top - this.popup.offsetHeight - 5}px`;
-                    this.popup.style.display = "block";
+                const errorId = errorSpan.dataset.errorId;
+                if (errorId) {
+                    const error = this.errorMap.get(errorId);
+                    if (error) {
+                        // Update popup content
+                        this.updatePopupContent(error);
+                        
+                        // Position popup below the word
+                        const rect = targetElement.getBoundingClientRect();
+                        this.popup.style.left = `${rect.left}px`;
+                        this.popup.style.top = `${rect.bottom + window.scrollY + 5}px`;
+                        this.popup.style.display = "block";
+                    }
                 }
             } else {
                 this.popup.style.display = "none";
@@ -275,11 +460,15 @@ export class OverlayManager {
         errors.reverse().forEach((error) => {
             const before = highlightedText.slice(0, error.start_index);
             const after = highlightedText.slice(error.end_index);
-            const errorWord = `<span class="gramcheck-error" data-error="${encodeURIComponent(error.description)}">${highlightedText.slice(
+            const errorKey = btoa(error.error_text + error.start_index);
+            const errorWord = `<span class="gramcheck-error" data-error-id="${errorKey}">${highlightedText.slice(
                 error.start_index,
                 error.end_index
             )}</span>`;
             highlightedText = before + errorWord + after;
+            
+            // Store error information for later retrieval
+            this.errorMap.set(errorKey, error);
         });
 
         this.overlayContent.innerHTML = highlightedText.replace(/\n/g, "<br>");
@@ -428,6 +617,42 @@ export class OverlayManager {
         
         // Initial sync
         this.handleScroll();
+    }
+
+    private updatePopupContent(error: APIGrammarError): void {
+        const content = this.popup.querySelector(".gramcheck-popup-content");
+        if (!content) return;
+
+        const titleElement = content.querySelector(".gramcheck-popup-error-title") as HTMLElement;
+        const descriptionElement = content.querySelector(".gramcheck-popup-error-description") as HTMLElement;
+        const suggestionsElement = content.querySelector(".gramcheck-popup-suggestions") as HTMLElement;
+
+        titleElement.textContent = error.title;
+        descriptionElement.textContent = error.description;
+        
+        // Clear and update suggestions
+        suggestionsElement.innerHTML = '';
+        error.suggestions.forEach(suggestion => {
+            const suggestionEl = document.createElement("button");
+            suggestionEl.className = "gramcheck-popup-suggestion";
+            suggestionEl.textContent = suggestion;
+            suggestionEl.addEventListener("click", () => {
+                if (this.currentTextarea) {
+                    // Replace the text in the textarea
+                    const start = error.start_index;
+                    const end = error.end_index;
+                    const value = this.currentTextarea.value;
+                    this.currentTextarea.value = value.substring(0, start) + suggestion + value.substring(end);
+                    
+                    // Trigger input event to update overlay
+                    this.currentTextarea.dispatchEvent(new Event('input'));
+                    
+                    // Hide popup
+                    this.popup.style.display = "none";
+                }
+            });
+            suggestionsElement.appendChild(suggestionEl);
+        });
     }
 
 }
