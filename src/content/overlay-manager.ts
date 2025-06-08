@@ -1,5 +1,4 @@
-import { GrammarError } from "../types";
-import { apiRequestLanguageOptions, apiRequestGrammarCheck } from "./utils/api";
+import { apiRequestLanguageOptions, apiRequestGrammarCheck, APIGrammarError } from "./utils/api";
 import browser from "webextension-polyfill";
 
 interface LanguageChoice {
@@ -271,14 +270,14 @@ export class OverlayManager {
         });
     }
 
-    public updateText(text: string, errors: GrammarError[]): void {
+    public updateText(text: string, errors: APIGrammarError[]): void {
         let highlightedText = text;
-        errors.reverse().forEach((error: GrammarError) => {
-            const before = highlightedText.slice(0, error.start);
-            const after = highlightedText.slice(error.end);
-            const errorWord = `<span class="gramcheck-error" data-error="${encodeURIComponent(error.message || '')}">${highlightedText.slice(
-                error.start,
-                error.end
+        errors.reverse().forEach((error) => {
+            const before = highlightedText.slice(0, error.start_index);
+            const after = highlightedText.slice(error.end_index);
+            const errorWord = `<span class="gramcheck-error" data-error="${encodeURIComponent(error.description)}">${highlightedText.slice(
+                error.start_index,
+                error.end_index
             )}</span>`;
             highlightedText = before + errorWord + after;
         });
@@ -372,15 +371,7 @@ export class OverlayManager {
     private async checkGrammar(text: string): Promise<void> {
         try {
             const result = await apiRequestGrammarCheck(text, this.currentLanguage);
-            // Convert API errors to our internal format
-            const errors: GrammarError[] = result.errs.map(err => ({
-                word: err.error_text,
-                start: err.start_index,
-                end: err.end_index,
-                message: err.description,
-                suggestions: err.suggestions
-            }));
-            this.updateText(text, errors);
+            this.updateText(text, result.errs);
         } catch (error) {
             console.error('Grammar check failed:', error);
         } finally {

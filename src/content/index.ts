@@ -1,4 +1,3 @@
-import { GrammarError } from "../types";
 import { loadWasm } from "../wasm";
 import { OverlayManager } from "./overlay-manager";
 
