@@ -41,7 +41,6 @@ export class OverlayManager {
         // Create error popup with improved styling
         this.popup = document.createElement("div");
         this.popup.className = "gramcheck-popup";
-        this.popup.textContent = "Possible typo?";
 
         // Create language selection elements
         this.languagePopup = document.createElement("div");
@@ -249,10 +248,15 @@ export class OverlayManager {
             if (!targetElement) return;
 
             if (targetElement.classList.contains("gramcheck-error")) {
-                const rect = targetElement.getBoundingClientRect();
-                this.popup.style.left = `${rect.left}px`;
-                this.popup.style.top = `${rect.top - this.popup.offsetHeight - 5}px`;
-                this.popup.style.display = "block";
+                const errorSpan = targetElement as HTMLSpanElement;
+                const errorMessage = decodeURIComponent(errorSpan.dataset.error || '');
+                if (errorMessage) {
+                    this.popup.textContent = errorMessage;
+                    const rect = targetElement.getBoundingClientRect();
+                    this.popup.style.left = `${rect.left}px`;
+                    this.popup.style.top = `${rect.top - this.popup.offsetHeight - 5}px`;
+                    this.popup.style.display = "block";
+                }
             } else {
                 this.popup.style.display = "none";
             }
@@ -272,7 +276,7 @@ export class OverlayManager {
         errors.reverse().forEach((error: GrammarError) => {
             const before = highlightedText.slice(0, error.start);
             const after = highlightedText.slice(error.end);
-            const errorWord = `<span class="gramcheck-error">${highlightedText.slice(
+            const errorWord = `<span class="gramcheck-error" data-error="${encodeURIComponent(error.message || '')}">${highlightedText.slice(
                 error.start,
                 error.end
             )}</span>`;
@@ -368,7 +372,15 @@ export class OverlayManager {
     private async checkGrammar(text: string): Promise<void> {
         try {
             const result = await apiRequestGrammarCheck(text, this.currentLanguage);
-            console.log('Grammar check result:', result);
+            // Convert API errors to our internal format
+            const errors: GrammarError[] = result.errs.map(err => ({
+                word: err.error_text,
+                start: err.start_index,
+                end: err.end_index,
+                message: err.description,
+                suggestions: err.suggestions
+            }));
+            this.updateText(text, errors);
         } catch (error) {
             console.error('Grammar check failed:', error);
         } finally {
@@ -396,8 +408,13 @@ export class OverlayManager {
             }
         };
         
-        // Set up input handler with debounce
+        // Set up input handler with immediate update and debounced grammar check
         const handleInput = () => {
+            const text = this.currentTextarea?.value || '';
+            
+            // Immediately update the displayed text
+            this.updateText(text, []);  // Clear any existing error highlights
+            
             // Show spinner and hide button
             this.loadingSpinner.style.display = 'block';
             this.languageButton.style.display = 'none';
@@ -407,7 +424,7 @@ export class OverlayManager {
                 clearTimeout(this.typingTimer);
             }
 
-            // Set new timer
+            // Set new timer for grammar checking
             this.typingTimer = setTimeout(() => {
                 if (this.currentTextarea) {
                     this.checkGrammar(this.currentTextarea.value);

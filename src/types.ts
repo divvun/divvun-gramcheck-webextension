@@ -2,6 +2,8 @@ export type GrammarError = {
   word: string;
   start: number;
   end: number;
+  message?: string;
+  suggestions?: string[];
 };
 
 export const PAGE_SCRIPT_READY = "PAGE_SCRIPT_READY";

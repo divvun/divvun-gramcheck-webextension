@@ -29,13 +29,6 @@ async function initialize() {
         const textarea = textareas[0];
         const overlay = new OverlayManager();
 
-        // Set up textarea event listeners
-        textarea.addEventListener("input", () => {
-            const text = textarea.value;
-            const errors = checkGrammar(text);
-            overlay.updateText(text, errors);
-        });
-
         // Watch for textarea size changes
         const resizeObserver = new ResizeObserver(() => overlay.updatePosition(textarea));
         resizeObserver.observe(textarea);
@@ -44,42 +37,20 @@ async function initialize() {
         window.addEventListener('scroll', () => overlay.updatePosition(textarea), true);
         textarea.addEventListener('scroll', () => overlay.updatePosition(textarea));
         
-        // Initial update
+        // Initial position update
         overlay.updatePosition(textarea);
-        overlay.updateText(textarea.value, checkGrammar(textarea.value));
-
-        // Handle language changes
-        overlay.setLanguageChangeHandler((language: string) => {
-            console.log("Language changed to:", language);
-            const text = textarea.value;
-            const errors = checkGrammar(text);
-            overlay.updateText(text, errors);
-        });
+        
+        // Trigger initial text update with existing content
+        const initialText = textarea.value;
+        if (initialText) {
+            // Update the overlay with initial text and simulate input to trigger grammar check
+            overlay.updateText(initialText, []);
+            textarea.dispatchEvent(new Event('input'));
+        }
     } catch (error) {
         console.error("Failed to initialize grammar checker:", error);
     }
 }
-
-// Temporary mock grammar check function (to be replaced with actual WASM implementation)
-function checkGrammar(text: string): GrammarError[] {
-    const errors: GrammarError[] = [];
-    const words = text.split(/\s+/);
-
-    words.forEach((word, index) => {
-        if (word.toLowerCase() === "som") {
-            const start = text.indexOf(word, errors.length ? errors[errors.length - 1].end : 0);
-            errors.push({
-                word,
-                start,
-                end: start + word.length,
-            });
-        }
-    });
-
-    return errors;
-}
-
-
 
 // Start initialization when script loads
 initialize();
