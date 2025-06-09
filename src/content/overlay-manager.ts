@@ -40,26 +40,26 @@ export class OverlayManager {
 
         // Create error popup with improved styling
         this.popup = document.createElement("div");
-        this.popup.className = "gramcheck-popup";
+        this.popup.className = "gramcheck-error-popup";
         
         // Create popup structure
         const titleBar = document.createElement("div");
-        titleBar.className = "gramcheck-popup-title";
+        titleBar.className = "gramcheck-error-popup-title";
         
         const logo = document.createElement("img");
         logo.src = browser.runtime.getURL('icons/icon-32.png');
         logo.alt = "Divvun Logo";
-        logo.className = "gramcheck-popup-logo";
+        logo.className = "gramcheck-error-popup-logo";
         titleBar.appendChild(logo);
         
         const title = document.createElement("span");
         title.textContent = "Divvun Grammar Checker";
-        title.className = "gramcheck-popup-title-text";
+        title.className = "gramcheck-error-popup-title-text";
         titleBar.appendChild(title);
         
         const closeButton = document.createElement("button");
         closeButton.innerHTML = "×";
-        closeButton.className = "gramcheck-popup-close";
+        closeButton.className = "gramcheck-error-popup-close";
         closeButton.addEventListener("click", (e) => {
             e.stopPropagation();
             this.popup.style.display = "none";
@@ -67,18 +67,18 @@ export class OverlayManager {
         titleBar.appendChild(closeButton);
         
         const content = document.createElement("div");
-        content.className = "gramcheck-popup-content";
+        content.className = "gramcheck-error-popup-content";
         
         const errorTitle = document.createElement("div");
-        errorTitle.className = "gramcheck-popup-error-title";
+        errorTitle.className = "gramcheck-error-popup-error-title";
         content.appendChild(errorTitle);
         
         const errorDescription = document.createElement("div");
-        errorDescription.className = "gramcheck-popup-error-description";
+        errorDescription.className = "gramcheck-error-popup-error-description";
         content.appendChild(errorDescription);
         
         const suggestionsList = document.createElement("div");
-        suggestionsList.className = "gramcheck-popup-suggestions";
+        suggestionsList.className = "gramcheck-error-popup-suggestions";
         content.appendChild(suggestionsList);
         
         this.popup.appendChild(titleBar);
@@ -198,7 +198,7 @@ export class OverlayManager {
                 pointer-events: auto;
                 cursor: pointer;
             }
-            .gramcheck-popup {
+            .gramcheck-error-popup {
                 position: absolute;
                 background: white;
                 border: 1px solid #ccc;
@@ -211,7 +211,7 @@ export class OverlayManager {
                 font-family: var(--font-ui);
             }
             
-            .gramcheck-popup-title {
+            .gramcheck-error-popup-title {
                 display: flex;
                 align-items: center;
                 background: #f5f5f5;
@@ -220,20 +220,20 @@ export class OverlayManager {
                 border-radius: 4px 4px 0 0;
             }
             
-            .gramcheck-popup-logo {
+            .gramcheck-error-popup-logo {
                 width: 20px;
                 height: 20px;
                 margin-right: 8px;
             }
             
-            .gramcheck-popup-title-text {
+            .gramcheck-error-popup-title-text {
                 flex-grow: 1;
                 font-weight: 500;
                 font-size: 14px;
                 color: #333;
             }
             
-            .gramcheck-popup-close {
+            .gramcheck-error-popup-close {
                 background: none;
                 border: none;
                 font-size: 20px;
@@ -244,22 +244,22 @@ export class OverlayManager {
                 font-family: var(--font-system);
             }
             
-            .gramcheck-popup-close:hover {
+            .gramcheck-error-popup-close:hover {
                 color: #333;
             }
             
-            .gramcheck-popup-content {
+            .gramcheck-error-popup-content {
                 padding: 12px;
             }
             
-            .gramcheck-popup-error-title {
+            .gramcheck-error-popup-error-title {
                 font-weight: 600;
                 font-size: 12px;
                 color: #333;
                 margin-bottom: 8px;
             }
             
-            .gramcheck-popup-error-description {
+            .gramcheck-error-popup-error-description {
                 font-weight: 400;
                 font-size: 14px;
                 color: #666;
@@ -267,14 +267,14 @@ export class OverlayManager {
                 line-height: 1.4;
             }
             
-            .gramcheck-popup-suggestions {
+            .gramcheck-error-popup-suggestions {
                 display: flex;
                 flex-wrap: wrap;
                 gap: 8px;
                 align-items: flex-start;
             }
             
-            .gramcheck-popup-suggestion {
+            .gramcheck-error-popup-suggestion {
                 background: #0078D4;
                 color: white;
                 border: none;
@@ -285,7 +285,7 @@ export class OverlayManager {
                 line-height: 1.4;
             }
             
-            .gramcheck-popup-suggestion:hover {
+            .gramcheck-error-popup-suggestion:hover {
                 background: #006bbe;
             }
             .gramcheck-language-button {
@@ -698,12 +698,12 @@ export class OverlayManager {
     }
 
     private updatePopupContent(error: APIGrammarError): void {
-        const content = this.popup.querySelector(".gramcheck-popup-content");
+        const content = this.popup.querySelector(".gramcheck-error-popup-content");
         if (!content) return;
 
-        const titleElement = content.querySelector(".gramcheck-popup-error-title") as HTMLElement;
-        const descriptionElement = content.querySelector(".gramcheck-popup-error-description") as HTMLElement;
-        const suggestionsElement = content.querySelector(".gramcheck-popup-suggestions") as HTMLElement;
+        const titleElement = content.querySelector(".gramcheck-error-popup-error-title") as HTMLElement;
+        const descriptionElement = content.querySelector(".gramcheck-error-popup-error-description") as HTMLElement;
+        const suggestionsElement = content.querySelector(".gramcheck-error-popup-suggestions") as HTMLElement;
 
         titleElement.textContent = error.title;
         descriptionElement.textContent = error.description;
@@ -712,7 +712,7 @@ export class OverlayManager {
         suggestionsElement.innerHTML = '';
         error.suggestions.forEach(suggestion => {
             const suggestionEl = document.createElement("button");
-            suggestionEl.className = "gramcheck-popup-suggestion";
+            suggestionEl.className = "gramcheck-error-popup-suggestion";
             suggestionEl.textContent = suggestion;
             suggestionEl.addEventListener("click", () => {
                 if (this.currentTextarea) {
