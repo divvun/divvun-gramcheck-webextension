@@ -156,6 +156,7 @@ export class OverlayManager {
             :root {
                 --font-ui: "Noto Sans", -apple-system, BlinkMacSystemFont, sans-serif;
                 --font-system: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", sans-serif;
+                --error-red: #E81123;
             }
 
             @keyframes spin {
@@ -193,7 +194,7 @@ export class OverlayManager {
             }
             .gramcheck-error {
                 text-decoration: underline;
-                text-decoration-color: red;
+                text-decoration-color: var(--error-red);
                 text-decoration-style: wavy;
                 pointer-events: auto;
                 cursor: pointer;
@@ -310,7 +311,7 @@ export class OverlayManager {
                 font-family: var(--font-ui);
             }
             .gramcheck-language-button.has-errors {
-                background: #E81123;
+                background: var(--error-red);
             }
             .gramcheck-language-button:hover {
                 filter: brightness(0.9);
