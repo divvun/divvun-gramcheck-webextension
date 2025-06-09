@@ -599,6 +599,9 @@ export class OverlayManager {
         // Set up textarea event handlers
         this.setupTextareaHandlers(textarea);
 
+        // Disable browser spellcheck when our grammar checker is active
+        textarea.spellcheck = false;
+
         // Set the overlay to exactly match the textarea's position
         this.overlay.style.position = "absolute";
         this.overlay.style.width = `${rect.width}px`;
