@@ -153,6 +153,11 @@ export class OverlayManager {
         return `
             @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap');
 
+            :root {
+                --font-ui: "Noto Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+                --font-system: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", sans-serif;
+            }
+
             @keyframes spin {
                 0% { transform: rotate(0deg); }
                 100% { transform: rotate(360deg); }
@@ -203,7 +208,7 @@ export class OverlayManager {
                 display: none;
                 min-width: 300px;
                 max-width: 400px;
-                font-family: "Noto Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+                font-family: var(--font-ui);
             }
             
             .gramcheck-popup-title {
@@ -236,6 +241,7 @@ export class OverlayManager {
                 cursor: pointer;
                 padding: 0 4px;
                 line-height: 1;
+                font-family: var(--font-system);
             }
             
             .gramcheck-popup-close:hover {
@@ -301,7 +307,7 @@ export class OverlayManager {
                 color: white;
                 font-size: 12px;
                 font-weight: 500;
-                font-family: "Noto Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+                font-family: var(--font-ui);
             }
             .gramcheck-language-button.has-errors {
                 background: #E81123;
@@ -331,7 +337,7 @@ export class OverlayManager {
                 max-height: min(400px, calc(100vh - 60px));
                 display: none;
                 flex-direction: column;
-                font-family: "Noto Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+                font-family: var(--font-ui);
             }
             .gramcheck-language-list-container {
                 flex: 1;
