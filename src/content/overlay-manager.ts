@@ -409,25 +409,6 @@ export class OverlayManager {
             .gramcheck-popup-error-description {
                 margin-bottom: 8px;
             }
-            .gramcheck-popup-suggestions {
-                display: flex;
-                flex-direction: row;
-                flex-wrap: wrap;
-                gap: 8px;
-            }
-            .gramcheck-popup-suggestion {
-                background: #0078D4;
-                color: white;
-                border: none;
-                border-radius: 4px;
-                padding: 4px 8px;
-                cursor: pointer;
-                font-size: 13px;
-                line-height: 1.4;
-            }
-            .gramcheck-popup-suggestion:hover {
-                background: #006bbe;
-            }
         `;
     }
 
