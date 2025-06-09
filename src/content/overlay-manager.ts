@@ -156,7 +156,9 @@ export class OverlayManager {
             :root {
                 --font-ui: "Noto Sans", -apple-system, BlinkMacSystemFont, sans-serif;
                 --font-system: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", sans-serif;
-                --error-red: #E81123;
+                --primary-color: #0078D4;
+                --primary-color-hover: #006BBE;
+                --error-color: #E81123;
             }
 
             @keyframes spin {
@@ -172,7 +174,7 @@ export class OverlayManager {
                 right: 10px;
                 border: 2px solid rgba(0, 0, 0, 0.1);
                 border-radius: 50%;
-                border-top: 2px solid #0078D4;
+                border-top: 2px solid var(--primary-color);
                 animation: spin 1s linear infinite;
                 z-index: 1000;
                 box-sizing: border-box;
@@ -194,7 +196,7 @@ export class OverlayManager {
             }
             .gramcheck-error {
                 text-decoration: underline;
-                text-decoration-color: var(--error-red);
+                text-decoration-color: var(--error-color);
                 text-decoration-style: wavy;
                 pointer-events: auto;
                 cursor: pointer;
@@ -276,7 +278,7 @@ export class OverlayManager {
             }
             
             .gramcheck-error-popup-suggestion {
-                background: #0078D4;
+                background: var(--primary-color);
                 color: white;
                 border: none;
                 border-radius: 4px;
@@ -287,13 +289,13 @@ export class OverlayManager {
             }
             
             .gramcheck-error-popup-suggestion:hover {
-                background: #006bbe;
+                background: var(--primary-color-hover);
             }
             .gramcheck-language-button {
                 position: absolute;
                 bottom: 10px;
                 right: 10px;
-                background: #0078D4;
+                background: var(--primary-color);
                 border: none;
                 border-radius: 50%;
                 width: 20px;
@@ -311,7 +313,7 @@ export class OverlayManager {
                 font-family: var(--font-ui);
             }
             .gramcheck-language-button.has-errors {
-                background: var(--error-red);
+                background: var(--error-color);
             }
             .gramcheck-language-button:hover {
                 filter: brightness(0.9);
@@ -361,7 +363,7 @@ export class OverlayManager {
                 background: #f5f5f5;
             }
             .gramcheck-language-item.selected {
-                color: #0078D4;
+                color: var(--primary-color);
                 font-weight: 500;
             }
             .gramcheck-language-item.selected::after {
