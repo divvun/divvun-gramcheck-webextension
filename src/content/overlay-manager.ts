@@ -727,4 +727,27 @@ export class OverlayManager {
         }
     }
 
+    public cleanup(): void {
+        // Remove elements from DOM
+        this.overlay.remove();
+        this.popup.remove();
+        this.languagePopup.remove();
+        this.languageButton.remove();
+        this.loadingSpinner.remove();
+
+        // Clean up event listeners
+        if (this.currentTextarea) {
+            this.currentTextarea.removeEventListener('scroll', this.handleScroll);
+            window.removeEventListener('scroll', () => this.updatePosition(this.currentTextarea!));
+        }
+
+        // Clear any pending timers
+        if (this.typingTimer) {
+            clearTimeout(this.typingTimer);
+        }
+
+        // Clear error map
+        this.errorMap.clear();
+    }
+
 }
