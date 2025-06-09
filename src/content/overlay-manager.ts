@@ -394,7 +394,7 @@ export class OverlayManager {
                 color: #666;
                 font-size: 20px;
                 cursor: pointer;
-                padding: 0 4px;
+                padding: 0 8px;
             }
             .gramcheck-popup-content {
                 padding: 8px;
