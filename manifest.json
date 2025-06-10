@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "divvun-gramcheck-webextension",
-  "description": "Divvun grammar checker webextension",
+  "name": "Divvun Grammar Checker",
+  "description": "First-class grammar checking for Sámi and other minority languages.",
   "version": "0.1",
   "homepage_url": "https://divvun.org",
 
