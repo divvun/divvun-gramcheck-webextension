@@ -170,8 +170,29 @@ export class OverlayManager {
                 --primary-color: #0078D4;
                 --primary-color-hover: #006BBE;
                 --error-color: #E81123;
+                
+                /* Light mode colors */
+                --background-color: #ffffff;
+                --secondary-background: #f5f5f5;
+                --border-color: #ccc;
+                --text-color: #333;
+                --text-secondary: #666;
+                --text-muted: #555;
+                --shadow-color: rgba(0, 0, 0, 0.15);
             }
 
+            @media (prefers-color-scheme: dark) {
+                :root {
+                    --background-color: #1e1e1e;
+                    --secondary-background: #2d2d2d;
+                    --border-color: #404040;
+                    --text-color: #ffffff;
+                    --text-secondary: #cccccc;
+                    --text-muted: #999999;
+                    --shadow-color: rgba(0, 0, 0, 0.3);
+                }
+            }
+            
             @keyframes spin {
                 0% { transform: rotate(0deg); }
                 100% { transform: rotate(360deg); }
@@ -214,10 +235,10 @@ export class OverlayManager {
             }
             .gramcheck-error-popup {
                 position: absolute;
-                background: white;
-                border: 1px solid #ccc;
+                background: var(--background-color);
+                border: 1px solid var(--border-color);
                 border-radius: 4px;
-                box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.15);
+                box-shadow: 0px 2px 6px var(--shadow-color);
                 z-index: 1000;
                 display: none;
                 min-width: 300px;
@@ -228,9 +249,9 @@ export class OverlayManager {
             .gramcheck-error-popup-title {
                 display: flex;
                 align-items: center;
-                background: #f5f5f5;
+                background: var(--secondary-background);
                 padding: 8px;
-                border-bottom: 1px solid #eee;
+                border-bottom: 1px solid var(--border-color);
                 border-radius: 4px 4px 0 0;
             }
             
@@ -244,14 +265,14 @@ export class OverlayManager {
                 flex-grow: 1;
                 font-weight: 500;
                 font-size: 14px;
-                color: #333;
+                color: var(--text-color);
             }
             
             .gramcheck-error-popup-close {
                 background: none;
                 border: none;
                 font-size: 20px;
-                color: #666;
+                color: var(--text-secondary);
                 cursor: pointer;
                 padding: 0 4px;
                 line-height: 1;
@@ -259,7 +280,7 @@ export class OverlayManager {
             }
             
             .gramcheck-error-popup-close:hover {
-                color: #333;
+                color: var(--text-color);
             }
             
             .gramcheck-error-popup-content {
@@ -269,14 +290,14 @@ export class OverlayManager {
             .gramcheck-error-popup-error-title {
                 font-weight: 600;
                 font-size: 12px;
-                color: #333;
+                color: var(--text-color);
                 margin-bottom: 8px;
             }
             
             .gramcheck-error-popup-error-description {
                 font-weight: 400;
                 font-size: 14px;
-                color: #666;
+                color: var(--text-secondary);
                 margin-bottom: 12px;
                 line-height: 1.4;
             }
@@ -339,10 +360,10 @@ export class OverlayManager {
             }
             .gramcheck-language-popup {
                 position: fixed;
-                background: white;
-                border: 1px solid #ccc;
+                background: var(--background-color);
+                border: 1px solid var(--border-color);
                 border-radius: 4px;
-                box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.15);
+                box-shadow: 0px 2px 6px var(--shadow-color);
                 z-index: 1001;
                 display: none;
                 pointer-events: auto;
@@ -437,11 +458,11 @@ export class OverlayManager {
                 align-items: center;
                 justify-content: space-between;
                 padding: 8px;
-                background: #f5f5f5;
-                color: #333;
+                background: var(--secondary-background);
+                color: var(--text-color);
                 border-top-left-radius: 4px;
                 border-top-right-radius: 4px;
-                border-bottom: 1px solid #eee;
+                border-bottom: 1px solid var(--border-color);
             }
             .gramcheck-popup-logo {
                 width: 24px;
@@ -451,14 +472,18 @@ export class OverlayManager {
             .gramcheck-popup-title-text {
                 font-size: 14px;
                 font-weight: 500;
+                color: var(--text-color);
             }
             .gramcheck-popup-close {
                 background: none;
                 border: none;
-                color: #666;
+                color: var(--text-secondary);
                 font-size: 20px;
                 cursor: pointer;
                 padding: 0 8px;
+            }
+            .gramcheck-popup-close:hover {
+                color: var(--text-color);
             }
             .gramcheck-popup-content {
                 padding: 8px;
@@ -468,9 +493,11 @@ export class OverlayManager {
             .gramcheck-popup-error-title {
                 font-weight: 500;
                 margin-bottom: 4px;
+                color: var(--text-color);
             }
             .gramcheck-popup-error-description {
                 margin-bottom: 8px;
+                color: var(--text-secondary);
             }
         `;
     }
