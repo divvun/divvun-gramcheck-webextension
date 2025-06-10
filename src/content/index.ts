@@ -102,27 +102,25 @@ function observeDOM() {
 }
 
 async function initialize() {
-    try {
-        // Load WASM module first
-        const mod = await loadWasm();
-        if (!mod) {
-            throw new Error("Failed to load WASM module");
-        }
-        console.log("WASM module loaded successfully");
+  const mod = await loadWasm();
+  if (mod) {
+    console.log("WASM module loaded successfully");
+    console.log("Calling wasm add function: 4 + 5 = ", mod.add(4, 5));
+  } else {
+    console.error("Failed to load WASM module. This is likely caused by the current site not allowing WASM to be loaded. In a future version, WASM will be loaded in the background script to circumvent this issue.");
+  }
 
-        // Wait for DOM to be ready if needed
-        if (document.readyState === 'loading') {
-            await new Promise(resolve => document.addEventListener('DOMContentLoaded', resolve));
-        }
+  // Wait for DOM to be ready if needed
+  if (document.readyState === "loading") {
+    await new Promise((resolve) =>
+      document.addEventListener("DOMContentLoaded", resolve)
+    );
+  }
 
-        initializeAllTextareas();
+  initializeAllTextareas();
 
-        // Start observing for new textareas
-        observeDOM();
-
-    } catch (error) {
-        console.error("Failed to initialize grammar checker:", error);
-    }
+  // Start observing for new textareas
+  observeDOM();
 }
 
 initialize();
