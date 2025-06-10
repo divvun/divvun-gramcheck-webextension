@@ -12,7 +12,6 @@ export class OverlayManager {
     private overlayContent: HTMLDivElement;
     private popup: HTMLDivElement;
     private languagePopup: HTMLDivElement;
-    private onLanguageChange?: (language: string) => void;
     private currentTextarea: HTMLTextAreaElement | null = null;
     private handleScroll = () => {};  // Will be replaced with actual scroll handler
     private languageButton: HTMLButtonElement;
@@ -534,17 +533,21 @@ export class OverlayManager {
                 const selectedCode = select.value;
                 this.currentLanguage = selectedCode;
                 this.languagePopup.style.display = "none";
-                this.onLanguageChange?.(this.currentLanguage);
+                
+                // Start immediate grammar check
+                this.startGrammarCheck(true);
             });
         } catch (error) {
             console.error("Failed to load available languages:", error);
         }
     }
 
-    private handleLanguageSelect(langCode: string): void {
+    public handleLanguageSelect(langCode: string): void {
         this.currentLanguage = langCode;
         this.languagePopup.style.display = "none";
-        this.onLanguageChange?.(this.currentLanguage);
+        
+        // Start immediate grammar check
+        this.startGrammarCheck(true);
     }
 
     private setupEventHandlers(languageButton: HTMLButtonElement): void {
@@ -731,8 +734,28 @@ export class OverlayManager {
         }
     }
 
-    public setLanguageChangeHandler(handler: (language: string) => void): void {
-        this.onLanguageChange = handler;
+    private startGrammarCheck(immediate: boolean = false): void {
+        if (!this.currentTextarea) return;
+        const text = this.currentTextarea.value;
+            
+        // Clear any existing error highlights and reset button state
+        this.updateText(text, []);
+            
+        // Show spinner and hide button
+        this.loadingSpinner.style.display = 'block';
+        this.languageButton.style.display = 'none';
+
+        // Clear previous timer
+        if (this.typingTimer) {
+            clearTimeout(this.typingTimer);
+        }
+
+        // Set new timer for grammar checking
+        this.typingTimer = setTimeout(() => {
+            if (this.currentTextarea) {
+                this.checkGrammar(this.currentTextarea.value);
+            }
+        }, immediate ? 0 : 1000); // Immediate or 1 second delay
     }
 
     private setupTextareaHandlers(textarea: HTMLTextAreaElement): void {
@@ -749,29 +772,8 @@ export class OverlayManager {
             }
         };
         
-        // Set up input handler with immediate update and debounced grammar check
-        const handleInput = () => {
-            const text = this.currentTextarea?.value || '';
-            
-            // Clear any existing error highlights and reset button state
-            this.updateText(text, []);
-            
-            // Show spinner and hide button
-            this.loadingSpinner.style.display = 'block';
-            this.languageButton.style.display = 'none';
-
-            // Clear previous timer
-            if (this.typingTimer) {
-                clearTimeout(this.typingTimer);
-            }
-
-            // Set new timer for grammar checking
-            this.typingTimer = setTimeout(() => {
-                if (this.currentTextarea) {
-                    this.checkGrammar(this.currentTextarea.value);
-                }
-            }, 1000); // 1 second delay
-        };
+        // Set up input handler that triggers grammar check
+        const handleInput = () => this.startGrammarCheck();
 
         textarea.addEventListener('scroll', this.handleScroll);
         textarea.addEventListener('input', handleInput);
