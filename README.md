@@ -1,8 +1,16 @@
 ### TODO
 
 - [ ] Implement message passing for wasm calls on sites that don't allow wasm such as github.com (see [this](https://github.com/theberrigan/rust-wasm-chrome-ext/blob/27da4da561f1fc93327d050ed6b6eb313e7254d6/extension/js/content.js#L4C1-L6C1))
-- [ ] Add button to overlay to trigger grammar check
-- [ ] Add settings to overlay for which language to use
-- [ ] Factor out args from PageScriptInterface and use parameter type to determine which command is being sent -- what happens if two functions share the same parameters?
-- [ ] Add Divvun API integration for running grammar checks
-- [ ] Test overlay with https://languagetool.org/webextension/welcome/finish?lang=en
+- [ ] Implement support for `input` and other non-textarea input boxes.
+
+Here are some sites that can be used to test:
+- https://github.com
+- https://pastebin.com/
+- https://news.ycombinator.com/
+- https://preview.colorlib.com/theme/bootstrap/contact-form-16/
+
+
+Sites known to cause problems:
+- https://stackoverflow.com/questions/ask
+- https://www.chakra-ui.com/docs/components/textarea
+- https://colorlib.com/etc/cf/ContactFrom_v19/index.html
