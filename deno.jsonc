@@ -2,9 +2,9 @@
   "tasks": {
     "clean": "cd rust && cargo clean",
     "build": "deno run -A build.ts",
-    "build:prod": "NODE_ENV=production deno run -A build.ts",
+    "build:prod": "deno run -A build.ts --prod",
     "cb": "deno task clean && deno task build",
-    "watch": "deno run -A watch.ts",
+    "watch": "deno run -A build.ts --watch",
     "dev": "deno task watch"
   },
   "imports": {
