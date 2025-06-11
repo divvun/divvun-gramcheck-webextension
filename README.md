@@ -1,6 +1,6 @@
 # Divvun Grammar Checker Webextension
 
-A proof-of-concept grammar checker that works with standard `<textarea>` HTML elements and uses the [Divvun API](https://github.com/divvun/divvun-api) to get find errors.
+A proof-of-concept Google Chrome webextension that works with standard `<textarea>` HTML elements and uses the [Divvun API](https://github.com/divvun/divvun-api) to detect errors.
 
 ### Setup
 1. Checkout this repo
