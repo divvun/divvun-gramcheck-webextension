@@ -1,166 +1,168 @@
-import { apiRequestLanguageOptions, apiRequestGrammarCheck, APIGrammarError } from "./utils/api";
-import browser from "webextension-polyfill";
+// @ts-types="npm:@types/webextension-polyfill"
+import * as browser from "webextension-polyfill";
+import { APIGrammarError, apiRequestGrammarCheck, apiRequestLanguageOptions } from "./utils/api.ts";
 
 interface LanguageChoice {
-    code: string;
-    displayName: string;
+  code: string;
+  displayName: string;
 }
 
 export class OverlayManager {
-    private currentLanguage: string = 'se';  // Set default language to 'se'
-    private overlay: HTMLDivElement;
-    private overlayContent: HTMLDivElement;
-    private popup: HTMLDivElement;
-    private languagePopup: HTMLDivElement;
-    private currentTextarea: HTMLTextAreaElement | null = null;
-    private handleScroll = () => {};  // Will be replaced with actual scroll handler
-    private languageButton: HTMLButtonElement;
-    private loadingSpinner: HTMLDivElement;
-    private typingTimer: ReturnType<typeof setTimeout> | null = null;
-    private errorMap: Map<string, APIGrammarError> = new Map();
+  private currentLanguage: string = "se"; // Set default language to 'se'
+  private overlay: HTMLDivElement;
+  private overlayContent: HTMLDivElement;
+  private popup: HTMLDivElement;
+  private languagePopup: HTMLDivElement;
+  private currentTextarea: HTMLTextAreaElement | null = null;
+  private handleScroll = () => {}; // Will be replaced with actual scroll handler
+  private languageButton: HTMLButtonElement;
+  private loadingSpinner: HTMLDivElement;
+  private typingTimer: ReturnType<typeof setTimeout> | null = null;
+  private errorMap: Map<string, APIGrammarError> = new Map();
 
-    constructor() {
-        // Create container for overlay with improved initial styles
-        this.overlay = document.createElement("div");
-        this.overlay.className = "gramcheck-overlay";
-        
-        // Create loading spinner
-        this.loadingSpinner = this.createLoadingSpinner();
-        
-        // Create a content container for the text
-        this.overlayContent = document.createElement("div");
-        this.overlayContent.className = "gramcheck-content";
-        this.overlay.appendChild(this.overlayContent);
-        
-        // Create style element
-        const style = document.createElement("style");
-        style.textContent = this.getStylesheet();
-        document.head.appendChild(style);
+  constructor() {
+    // Create container for overlay with improved initial styles
+    this.overlay = document.createElement("div");
+    this.overlay.className = "gramcheck-overlay";
 
-        // Create error popup with improved styling
-        this.popup = document.createElement("div");
-        this.popup.className = "gramcheck-error-popup";
-        
-        // Create popup structure
-        const titleBar = document.createElement("div");
-        titleBar.className = "gramcheck-error-popup-title";
-        
-        const logo = document.createElement("img");
-        logo.src = browser.runtime.getURL('icons/icon-32.png');
-        logo.alt = "Divvun Logo";
-        logo.className = "gramcheck-error-popup-logo";
-        titleBar.appendChild(logo);
-        
-        const title = document.createElement("span");
-        title.textContent = "Divvun Grammar Checker";
-        title.className = "gramcheck-error-popup-title-text";
-        titleBar.appendChild(title);
-        
-        const closeButton = document.createElement("button");
-        closeButton.innerHTML = "×";
-        closeButton.className = "gramcheck-error-popup-close";
-        closeButton.addEventListener("click", (e) => {
-            e.stopPropagation();
-            this.popup.style.display = "none";
-        });
-        titleBar.appendChild(closeButton);
-        
-        const content = document.createElement("div");
-        content.className = "gramcheck-error-popup-content";
-        
-        const errorTitle = document.createElement("div");
-        errorTitle.className = "gramcheck-error-popup-error-title";
-        content.appendChild(errorTitle);
-        
-        const errorDescription = document.createElement("div");
-        errorDescription.className = "gramcheck-error-popup-error-description";
-        content.appendChild(errorDescription);
-        
-        const suggestionsList = document.createElement("div");
-        suggestionsList.className = "gramcheck-error-popup-suggestions";
-        content.appendChild(suggestionsList);
-        
-        this.popup.appendChild(titleBar);
-        this.popup.appendChild(content);
+    // Create loading spinner
+    this.loadingSpinner = this.createLoadingSpinner();
 
-        // Create language selection elements
-        this.languagePopup = document.createElement("div");
-        this.languagePopup.className = "gramcheck-language-popup";
-        
-        // Create popup header
-        const langTitleBar = document.createElement("div");
-        langTitleBar.className = "gramcheck-popup-title";
-        
-        const langLogo = document.createElement("img");
-        langLogo.src = browser.runtime.getURL('icons/icon-32.png');
-        langLogo.alt = "Divvun Logo";
-        langLogo.className = "gramcheck-popup-logo";
-        langTitleBar.appendChild(langLogo);
-        
-        const langTitle = document.createElement("span");
-        langTitle.textContent = "Divvun Grammar Checker";
-        langTitle.className = "gramcheck-popup-title-text";
-        langTitleBar.appendChild(langTitle);
-        
-        const langCloseButton = document.createElement("button");
-        langCloseButton.innerHTML = "×";
-        langCloseButton.className = "gramcheck-popup-close";
-        langCloseButton.addEventListener("click", (e) => {
-            e.stopPropagation();
-            this.languagePopup.style.display = "none";
-        });
-        langTitleBar.appendChild(langCloseButton);
-        
-        this.languagePopup.appendChild(langTitleBar);
-        
-        // Create the container for SVG and dropdown
-        const container = document.createElement("div");
-        container.className = "gramcheck-language-container";
+    // Create a content container for the text
+    this.overlayContent = document.createElement("div");
+    this.overlayContent.className = "gramcheck-content";
+    this.overlay.appendChild(this.overlayContent);
 
-        // Add the language icon SVG by embedding it
-        const icon = document.createElement('div');
-        icon.className = "gramcheck-language-icon";
-        icon.innerHTML = `<svg width="34" height="19" viewBox="0 0 34 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+    // Create style element
+    const style = document.createElement("style");
+    style.textContent = this.getStylesheet();
+    document.head.appendChild(style);
+
+    // Create error popup with improved styling
+    this.popup = document.createElement("div");
+    this.popup.className = "gramcheck-error-popup";
+
+    // Create popup structure
+    const titleBar = document.createElement("div");
+    titleBar.className = "gramcheck-error-popup-title";
+
+    const logo = document.createElement("img");
+    logo.src = browser.runtime.getURL("icons/icon-32.png");
+    logo.alt = "Divvun Logo";
+    logo.className = "gramcheck-error-popup-logo";
+    titleBar.appendChild(logo);
+
+    const title = document.createElement("span");
+    title.textContent = "Divvun Grammar Checker";
+    title.className = "gramcheck-error-popup-title-text";
+    titleBar.appendChild(title);
+
+    const closeButton = document.createElement("button");
+    closeButton.innerHTML = "×";
+    closeButton.className = "gramcheck-error-popup-close";
+    closeButton.addEventListener("click", (e) => {
+      e.stopPropagation();
+      this.popup.style.display = "none";
+    });
+    titleBar.appendChild(closeButton);
+
+    const content = document.createElement("div");
+    content.className = "gramcheck-error-popup-content";
+
+    const errorTitle = document.createElement("div");
+    errorTitle.className = "gramcheck-error-popup-error-title";
+    content.appendChild(errorTitle);
+
+    const errorDescription = document.createElement("div");
+    errorDescription.className = "gramcheck-error-popup-error-description";
+    content.appendChild(errorDescription);
+
+    const suggestionsList = document.createElement("div");
+    suggestionsList.className = "gramcheck-error-popup-suggestions";
+    content.appendChild(suggestionsList);
+
+    this.popup.appendChild(titleBar);
+    this.popup.appendChild(content);
+
+    // Create language selection elements
+    this.languagePopup = document.createElement("div");
+    this.languagePopup.className = "gramcheck-language-popup";
+
+    // Create popup header
+    const langTitleBar = document.createElement("div");
+    langTitleBar.className = "gramcheck-popup-title";
+
+    const langLogo = document.createElement("img");
+    langLogo.src = browser.runtime.getURL("icons/icon-32.png");
+    langLogo.alt = "Divvun Logo";
+    langLogo.className = "gramcheck-popup-logo";
+    langTitleBar.appendChild(langLogo);
+
+    const langTitle = document.createElement("span");
+    langTitle.textContent = "Divvun Grammar Checker";
+    langTitle.className = "gramcheck-popup-title-text";
+    langTitleBar.appendChild(langTitle);
+
+    const langCloseButton = document.createElement("button");
+    langCloseButton.innerHTML = "×";
+    langCloseButton.className = "gramcheck-popup-close";
+    langCloseButton.addEventListener("click", (e) => {
+      e.stopPropagation();
+      this.languagePopup.style.display = "none";
+    });
+    langTitleBar.appendChild(langCloseButton);
+
+    this.languagePopup.appendChild(langTitleBar);
+
+    // Create the container for SVG and dropdown
+    const container = document.createElement("div");
+    container.className = "gramcheck-language-container";
+
+    // Add the language icon SVG by embedding it
+    const icon = document.createElement("div");
+    icon.className = "gramcheck-language-icon";
+    icon.innerHTML =
+      `<svg width="34" height="19" viewBox="0 0 34 19" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M17.5059 5.38781H10.7306V1.68405C10.7306 1.16844 10.293 0.75 9.75302 0.75C9.21299 0.75 8.77543 1.16844 8.77543 1.68405V5.38781H1.97758C1.43794 5.38781 1 5.80625 1 6.32186C1 6.83784 1.43794 7.2559 1.97758 7.2559H12.2444C11.25 9.17197 8.54093 13.0787 1.94966 16.3287C1.546 16.5249 1.33599 16.96 1.44236 17.3807C1.54873 17.8014 1.94342 18.097 2.39618 18.0951C2.55242 18.0962 2.70593 18.0594 2.84308 17.9886C5.17304 16.8704 7.3433 15.4713 9.3004 13.8254L14.7186 18.0367C14.8904 18.1748 15.1082 18.2507 15.333 18.25C15.748 18.2519 16.1189 18.0035 16.2584 17.6302C16.3979 17.2568 16.2755 16.8398 15.9529 16.5904L10.7304 12.4968C12.2885 10.9854 13.5353 9.20774 14.4058 7.25593H17.5224C18.0624 7.25593 18.5 6.83787 18.5 6.32189C18.5 5.80628 18.0624 5.38784 17.5224 5.38784L17.5059 5.38781Z" fill="currentColor" stroke="currentColor"/>
             <path d="M33.246 16.9744L26.8481 1.27152L26.7678 1.15987C26.7678 1.15987 26.7678 1.10683 26.7278 1.08531L26.6647 1.01076L26.6187 0.946959L26.5444 0.893917C26.522 0.871662 26.4973 0.852003 26.4697 0.835312L26.3894 0.792656L26.2919 0.75H25.5879L25.4904 0.792656L25.4101 0.835312L25.3358 0.888354L25.2615 0.946959L25.1984 1.01595V1.01632C25.176 1.04006 25.1548 1.06491 25.1352 1.09051L25.0893 1.1595V1.15987C25.0717 1.1888 25.0565 1.21921 25.0437 1.25037L18.5655 16.9741C18.3677 17.4615 18.633 18.0056 19.158 18.1893C19.6834 18.3729 20.2691 18.1262 20.4669 17.6388L21.9964 13.8847H29.8435L31.3501 17.6388C31.5004 17.9993 31.8731 18.2375 32.2895 18.2397C32.4109 18.2397 32.5316 18.2178 32.6447 18.1759C32.896 18.091 33.1009 17.9162 33.2136 17.6907C33.3267 17.4656 33.3383 17.2074 33.246 16.9741L33.246 16.9744ZM22.7579 12.0236L25.9079 4.22835L29.0583 12.0236H22.7579Z" fill="currentColor" stroke="currentColor"/></svg>`;
-        container.appendChild(icon);
+    container.appendChild(icon);
 
-        // Create the select element
-        const select = document.createElement("select");
-        select.className = "gramcheck-language-select";
-        container.appendChild(select);
+    // Create the select element
+    const select = document.createElement("select");
+    select.className = "gramcheck-language-select";
+    container.appendChild(select);
 
-        this.languagePopup.appendChild(container);
-        
-        this.languageButton = this.createLanguageButton();
-        
-        // Populate the dropdown asynchronously
-        this.populateLanguageList(select);
+    this.languagePopup.appendChild(container);
 
-        // Set up event handlers
-        this.setupEventHandlers(this.languageButton);
+    this.languageButton = this.createLanguageButton();
 
-        // Append elements with proper z-index stacking
-        document.body.appendChild(this.overlay);
-        document.body.appendChild(this.popup);
-        this.overlay.appendChild(this.languageButton); // Append button to overlay instead of body
-        this.overlay.appendChild(this.loadingSpinner); // Add the loading spinner
-        document.body.appendChild(this.languagePopup);
+    // Populate the dropdown asynchronously
+    this.populateLanguageList(select);
 
-        // Initialize overlays with display: none
-        this.popup.style.display = "none";
-        this.languagePopup.style.display = "none";
-    }
+    // Set up event handlers
+    this.setupEventHandlers(this.languageButton);
 
-    private createLoadingSpinner(): HTMLDivElement {
-        const spinner = document.createElement('div');
-        spinner.className = 'gramcheck-spinner';
-        spinner.style.display = 'none';
-        return spinner;
-    }
+    // Append elements with proper z-index stacking
+    document.body.appendChild(this.overlay);
+    document.body.appendChild(this.popup);
+    this.overlay.appendChild(this.languageButton); // Append button to overlay instead of body
+    this.overlay.appendChild(this.loadingSpinner); // Add the loading spinner
+    document.body.appendChild(this.languagePopup);
 
-    private getStylesheet(): string {
-        return `
+    // Initialize overlays with display: none
+    this.popup.style.display = "none";
+    this.languagePopup.style.display = "none";
+  }
+
+  private createLoadingSpinner(): HTMLDivElement {
+    const spinner = document.createElement("div");
+    spinner.className = "gramcheck-spinner";
+    spinner.style.display = "none";
+    return spinner;
+  }
+
+  private getStylesheet(): string {
+    return `
             @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap');
 
             :root {
@@ -499,356 +501,367 @@ export class OverlayManager {
                 color: var(--text-secondary);
             }
         `;
-    }
+  }
 
-    private createLanguageButton(): HTMLButtonElement {
-        const languageButton = document.createElement("button");
-        languageButton.className = "gramcheck-language-button";
-        languageButton.title = "Language Settings";
-        return languageButton;
-    }
+  private createLanguageButton(): HTMLButtonElement {
+    const languageButton = document.createElement("button");
+    languageButton.className = "gramcheck-language-button";
+    languageButton.title = "Language Settings";
+    return languageButton;
+  }
 
-    private async populateLanguageList(select: HTMLSelectElement): Promise<void> {
-        try {
-            const response = await apiRequestLanguageOptions();
-            const availableLanguages = Object.entries(response.available.grammar).map(([code, name]): LanguageChoice => ({
-                code,
-                displayName: name
-            }));
-            
-            // Clear existing options
-            select.innerHTML = '';
-            
-            // Populate the dropdown
-            availableLanguages.forEach(lang => {
-                const option = document.createElement("option");
-                option.value = lang.code;
-                option.textContent = lang.displayName;
-                option.selected = lang.code === this.currentLanguage;
-                select.appendChild(option);
-            });
+  private async populateLanguageList(select: HTMLSelectElement): Promise<void> {
+    try {
+      const response = await apiRequestLanguageOptions();
+      const availableLanguages = Object.entries(response.available.grammar).map((
+        [code, name],
+      ): LanguageChoice => ({
+        code,
+        displayName: name,
+      }));
 
-            // Add change event listener
-            select.addEventListener("change", () => {
-                const selectedCode = select.value;
-                this.currentLanguage = selectedCode;
-                this.languagePopup.style.display = "none";
-                
-                // Start immediate grammar check
-                this.startGrammarCheck(true);
-            });
-        } catch (error) {
-            console.error("Failed to load available languages:", error);
-        }
-    }
+      // Clear existing options
+      select.innerHTML = "";
 
-    public handleLanguageSelect(langCode: string): void {
-        this.currentLanguage = langCode;
+      // Populate the dropdown
+      availableLanguages.forEach((lang) => {
+        const option = document.createElement("option");
+        option.value = lang.code;
+        option.textContent = lang.displayName;
+        option.selected = lang.code === this.currentLanguage;
+        select.appendChild(option);
+      });
+
+      // Add change event listener
+      select.addEventListener("change", () => {
+        const selectedCode = select.value;
+        this.currentLanguage = selectedCode;
         this.languagePopup.style.display = "none";
-        
+
         // Start immediate grammar check
         this.startGrammarCheck(true);
+      });
+    } catch (error) {
+      console.error("Failed to load available languages:", error);
     }
+  }
 
-    private setupEventHandlers(languageButton: HTMLButtonElement): void {
-        // Language button click handler
-        languageButton.addEventListener("click", (event: Event) => {
-            event.stopPropagation();
-            const buttonRect = (event.currentTarget as HTMLElement).getBoundingClientRect();
-            
-            // Position popup below the button
-            const popupTop = buttonRect.bottom + 5;  // 5px gap
-            const popupRight = window.innerWidth - buttonRect.right;
-            
-            // Ensure popup stays within viewport
-            this.languagePopup.style.top = `${popupTop}px`;
-            this.languagePopup.style.right = `${popupRight}px`;
-            this.languagePopup.style.maxHeight = `${window.innerHeight - popupTop - 20}px`;  // 20px bottom margin
-            
-            this.languagePopup.style.display = this.languagePopup.style.display === "none" ? "block" : "none";
-        });
+  public handleLanguageSelect(langCode: string): void {
+    this.currentLanguage = langCode;
+    this.languagePopup.style.display = "none";
 
-        // Handle error clicks
-        this.overlay.addEventListener("click", (event: Event) => {
-            const targetElement = event.target as HTMLElement;
-            if (!targetElement) return;
+    // Start immediate grammar check
+    this.startGrammarCheck(true);
+  }
 
-            if (targetElement.classList.contains("gramcheck-error")) {
-                const errorSpan = targetElement as HTMLSpanElement;
-                const errorId = errorSpan.dataset.errorId;
-                if (errorId) {
-                    const error = this.errorMap.get(errorId);
-                    if (error) {
-                        // Update popup content
-                        this.updatePopupContent(error);
-                        
-                        // Position popup below the word
-                        const rect = targetElement.getBoundingClientRect();
-                        this.popup.style.left = `${rect.left}px`;
-                        this.popup.style.top = `${rect.bottom + window.scrollY + 5}px`;
-                        this.popup.style.display = "block";
-                    }
-                }
-            } else {
-                this.popup.style.display = "none";
-            }
-        });
+  private setupEventHandlers(languageButton: HTMLButtonElement): void {
+    // Language button click handler
+    languageButton.addEventListener("click", (event: Event) => {
+      event.stopPropagation();
+      const buttonRect = (event.currentTarget as HTMLElement).getBoundingClientRect();
 
-        // Close popups when clicking outside
-        document.addEventListener("click", (event) => {
-            // Don't close if clicking inside the language popup
-            if (!this.languagePopup.contains(event.target as Node)) {
-                this.languagePopup.style.display = "none";
-            }
+      // Position popup below the button
+      const popupTop = buttonRect.bottom + 5; // 5px gap
+      const popupRight = self.innerWidth - buttonRect.right;
 
-            // Close error popup if clicking outside the overlay
-            if (!this.overlay.contains(event.target as Node)) {
-                this.popup.style.display = "none";
-            }
-        });
-    }
+      // Ensure popup stays within viewport
+      this.languagePopup.style.top = `${popupTop}px`;
+      this.languagePopup.style.right = `${popupRight}px`;
+      this.languagePopup.style.maxHeight = `${self.innerHeight - popupTop - 20}px`; // 20px bottom margin
 
-    public updateText(text: string, errors: APIGrammarError[]): void {
-        // Clear existing errors
-        this.errorMap.clear();
-        
-        let highlightedText = text;
-        errors.reverse().forEach((error) => {
-            const before = highlightedText.slice(0, error.start_index);
-            const after = highlightedText.slice(error.end_index);
-            const errorKey = btoa(error.error_text + error.start_index);
-            const errorWord = `<span class="gramcheck-error" data-error-id="${errorKey}">${highlightedText.slice(
-                error.start_index,
-                error.end_index
-            )}</span>`;
-            highlightedText = before + errorWord + after;
-            
-            // Store error information for later retrieval
-            this.errorMap.set(errorKey, error);
-        });
+      this.languagePopup.style.display = this.languagePopup.style.display === "none"
+        ? "block"
+        : "none";
+    });
 
-        this.overlayContent.innerHTML = highlightedText.replace(/\n/g, "<br>");
-        
-        // Update button state with error count
-        this.updateButtonState(this.errorMap.size);
-    }
+    // Handle error clicks
+    this.overlay.addEventListener("click", (event: Event) => {
+      const targetElement = event.target as HTMLElement;
+      if (!targetElement) return;
 
-    private getStyles(source: HTMLTextAreaElement): Partial<CSSStyleDeclaration> {
-        const computedStyle = window.getComputedStyle(source);
-        const propertiesToCopy = [
-          "font",
-          "color",
-          "fontSize",
-          "fontFamily",
-          "fontWeight",
-          "lineHeight",
-          "letterSpacing",
-          "textTransform",
-          "border",
-          "width",
-          "height",
-          // // Font properties
-          // "font", "color", "fontSize", "fontFamily", "fontWeight", "fontStyle",
-          // "lineHeight", "letterSpacing", "wordSpacing", "textTransform",
-          // "textIndent", "textAlign", "direction",
+      if (targetElement.classList.contains("gramcheck-error")) {
+        const errorSpan = targetElement as HTMLSpanElement;
+        const errorId = errorSpan.dataset.errorId;
+        if (errorId) {
+          const error = this.errorMap.get(errorId);
+          if (error) {
+            // Update popup content
+            this.updatePopupContent(error);
 
-          // // Box model
-          // // "padding",
-          // "paddingTop", "paddingRight", "paddingBottom", "paddingLeft",
-          // "margin", "marginTop", "marginRight", "marginBottom", "marginLeft",
-          // "border", "borderWidth", "borderStyle", "borderColor",
-          // "borderRadius", "borderTopLeftRadius", "borderTopRightRadius",
-          // "borderBottomLeftRadius", "borderBottomRightRadius",
-
-          // // Sizing and positioning
-          // "width", "height", "minWidth", "minHeight", "maxWidth", "maxHeight",
-          // "boxSizing",
-
-          // // Visual properties
-          // "backgroundColor", "backgroundImage", "backgroundPosition", "backgroundRepeat",
-          // "boxShadow", "opacity",
-
-          // // Text overflow and wrapping
-          // "whiteSpace", "wordBreak", "overflowWrap", "textOverflow",
-
-          // // Scrolling
-          // "overflowX", "overflowY"
-        ];
-
-        const styles: Partial<CSSStyleDeclaration> = {};
-        propertiesToCopy.forEach((property) => {
-            const value = computedStyle.getPropertyValue(property);
-            if (value) {
-                styles[property as any] = value;
-            }
-        });
-        return styles;
-    }
-
-    public updatePosition(textarea: HTMLTextAreaElement): void {
-        const rect = textarea.getBoundingClientRect();
-        const styles = this.getStyles(textarea);
-
-        // Apply textarea styles to overlay
-        Object.assign(this.overlay.style, styles);
-        
-        // Apply padding and scroll styles to content container
-        const computedStyle = window.getComputedStyle(textarea);
-        this.overlayContent.style.padding = computedStyle.padding;
-        
-        // Set up textarea event handlers
-        this.setupTextareaHandlers(textarea);
-
-        // Disable browser spellcheck when our grammar checker is active
-        textarea.spellcheck = false;
-
-        // Set the overlay to exactly match the textarea's position
-        this.overlay.style.position = "absolute";
-        this.overlay.style.width = `${rect.width}px`;
-        this.overlay.style.height = `${rect.height}px`;
-        this.overlay.style.left = `${rect.left + window.scrollX}px`;
-        this.overlay.style.top = `${rect.top + window.scrollY}px`;
-        this.overlay.style.pointerEvents = "none"; // Allow clicks to pass through to textarea
-
-        // Override specific styles for the overlay's functionality
-        // this.overlay.style.backgroundColor = "white"; // Make overlay background white
-        // this.overlay.style.pointerEvents = "auto"; // Enable interaction
-        // this.overlay.style.minHeight = "100px"; // Minimum height for visibility
-        // this.overlay.style.maxHeight = "200px"; // Maximum height before scrolling
-        // this.overlay.style.overflowY = "auto"; // Enable vertical scrolling if needed
-        // this.overlay.style.border = "1px solid #ccc"; // Add a light border
-        // this.overlay.style.boxShadow = "0 2px 6px rgba(0,0,0,0.15)"; // Add subtle shadow
-        // this.overlay.style.zIndex = "1000"; // Ensure overlay appears above other content
-    }
-
-    private async checkGrammar(text: string): Promise<void> {
-        try {
-            const result = await apiRequestGrammarCheck(text, this.currentLanguage);
-            this.updateText(text, result.errs);
-        } catch (error) {
-            console.error('Grammar check failed:', error);
-        } finally {
-            // Hide spinner and show button
-            this.loadingSpinner.style.display = 'none';
-            this.languageButton.style.display = 'block';
+            // Position popup below the word
+            const rect = targetElement.getBoundingClientRect();
+            this.popup.style.left = `${rect.left}px`;
+            this.popup.style.top = `${rect.bottom + self.scrollY + 5}px`;
+            this.popup.style.display = "block";
+          }
         }
+      } else {
+        this.popup.style.display = "none";
+      }
+    });
+
+    // Close popups when clicking outside
+    document.addEventListener("click", (event) => {
+      // Don't close if clicking inside the language popup
+      if (!this.languagePopup.contains(event.target as Node)) {
+        this.languagePopup.style.display = "none";
+      }
+
+      // Close error popup if clicking outside the overlay
+      if (!this.overlay.contains(event.target as Node)) {
+        this.popup.style.display = "none";
+      }
+    });
+  }
+
+  public updateText(text: string, errors: APIGrammarError[]): void {
+    // Clear existing errors
+    this.errorMap.clear();
+
+    let highlightedText = text;
+    errors.reverse().forEach((error) => {
+      const before = highlightedText.slice(0, error.start_index);
+      const after = highlightedText.slice(error.end_index);
+      const errorKey = btoa(error.error_text + error.start_index);
+      const errorWord = `<span class="gramcheck-error" data-error-id="${errorKey}">${
+        highlightedText.slice(
+          error.start_index,
+          error.end_index,
+        )
+      }</span>`;
+      highlightedText = before + errorWord + after;
+
+      // Store error information for later retrieval
+      this.errorMap.set(errorKey, error);
+    });
+
+    this.overlayContent.innerHTML = highlightedText.replace(/\n/g, "<br>");
+
+    // Update button state with error count
+    this.updateButtonState(this.errorMap.size);
+  }
+
+  private getStyles(source: HTMLTextAreaElement): Partial<CSSStyleDeclaration> {
+    const computedStyle = self.getComputedStyle(source);
+    const propertiesToCopy: string[] = [
+      "font",
+      "color",
+      "fontSize",
+      "fontFamily",
+      "fontWeight",
+      "lineHeight",
+      "letterSpacing",
+      "textTransform",
+      "border",
+      "width",
+      "height",
+      // // Font properties
+      // "font", "color", "fontSize", "fontFamily", "fontWeight", "fontStyle",
+      // "lineHeight", "letterSpacing", "wordSpacing", "textTransform",
+      // "textIndent", "textAlign", "direction",
+
+      // // Box model
+      // // "padding",
+      // "paddingTop", "paddingRight", "paddingBottom", "paddingLeft",
+      // "margin", "marginTop", "marginRight", "marginBottom", "marginLeft",
+      // "border", "borderWidth", "borderStyle", "borderColor",
+      // "borderRadius", "borderTopLeftRadius", "borderTopRightRadius",
+      // "borderBottomLeftRadius", "borderBottomRightRadius",
+
+      // // Sizing and positioning
+      // "width", "height", "minWidth", "minHeight", "maxWidth", "maxHeight",
+      // "boxSizing",
+
+      // // Visual properties
+      // "backgroundColor", "backgroundImage", "backgroundPosition", "backgroundRepeat",
+      // "boxShadow", "opacity",
+
+      // // Text overflow and wrapping
+      // "whiteSpace", "wordBreak", "overflowWrap", "textOverflow",
+
+      // // Scrolling
+      // "overflowX", "overflowY"
+    ];
+
+    const styles: Partial<CSSStyleDeclaration> = {};
+    propertiesToCopy.forEach((property) => {
+      const value = computedStyle.getPropertyValue(property);
+      if (value) {
+        // deno-lint-ignore no-explicit-any
+        styles[property as any] = value;
+      }
+    });
+    return styles;
+  }
+
+  public updatePosition(textarea: HTMLTextAreaElement): void {
+    const rect = textarea.getBoundingClientRect();
+    const styles = this.getStyles(textarea);
+
+    // Apply textarea styles to overlay
+    Object.assign(this.overlay.style, styles);
+
+    // Apply padding and scroll styles to content container
+    const computedStyle = self.getComputedStyle(textarea);
+    this.overlayContent.style.padding = computedStyle.padding;
+
+    // Set up textarea event handlers
+    this.setupTextareaHandlers(textarea);
+
+    // Disable browser spellcheck when our grammar checker is active
+    textarea.spellcheck = false;
+
+    // Set the overlay to exactly match the textarea's position
+    this.overlay.style.position = "absolute";
+    this.overlay.style.width = `${rect.width}px`;
+    this.overlay.style.height = `${rect.height}px`;
+    this.overlay.style.left = `${rect.left + self.scrollX}px`;
+    this.overlay.style.top = `${rect.top + self.scrollY}px`;
+    this.overlay.style.pointerEvents = "none"; // Allow clicks to pass through to textarea
+
+    // Override specific styles for the overlay's functionality
+    // this.overlay.style.backgroundColor = "white"; // Make overlay background white
+    // this.overlay.style.pointerEvents = "auto"; // Enable interaction
+    // this.overlay.style.minHeight = "100px"; // Minimum height for visibility
+    // this.overlay.style.maxHeight = "200px"; // Maximum height before scrolling
+    // this.overlay.style.overflowY = "auto"; // Enable vertical scrolling if needed
+    // this.overlay.style.border = "1px solid #ccc"; // Add a light border
+    // this.overlay.style.boxShadow = "0 2px 6px rgba(0,0,0,0.15)"; // Add subtle shadow
+    // this.overlay.style.zIndex = "1000"; // Ensure overlay appears above other content
+  }
+
+  private async checkGrammar(text: string): Promise<void> {
+    try {
+      const result = await apiRequestGrammarCheck(text, this.currentLanguage);
+      this.updateText(text, result.errs);
+    } catch (error) {
+      console.error("Grammar check failed:", error);
+    } finally {
+      // Hide spinner and show button
+      this.loadingSpinner.style.display = "none";
+      this.languageButton.style.display = "block";
+    }
+  }
+
+  private startGrammarCheck(immediate: boolean = false): void {
+    if (!this.currentTextarea) return;
+    const text = this.currentTextarea.value;
+
+    // Clear any existing error highlights and reset button state
+    this.updateText(text, []);
+
+    // Show spinner and hide button
+    this.loadingSpinner.style.display = "block";
+    this.languageButton.style.display = "none";
+
+    // Clear previous timer
+    if (this.typingTimer) {
+      clearTimeout(this.typingTimer);
     }
 
-    private startGrammarCheck(immediate: boolean = false): void {
-        if (!this.currentTextarea) return;
-        const text = this.currentTextarea.value;
-            
-        // Clear any existing error highlights and reset button state
-        this.updateText(text, []);
-            
-        // Show spinner and hide button
-        this.loadingSpinner.style.display = 'block';
-        this.languageButton.style.display = 'none';
+    // Set new timer for grammar checking
+    this.typingTimer = setTimeout(() => {
+      if (this.currentTextarea) {
+        this.checkGrammar(this.currentTextarea.value);
+      }
+    }, immediate ? 0 : 1000); // Immediate or 1 second delay
+  }
 
-        // Clear previous timer
-        if (this.typingTimer) {
-            clearTimeout(this.typingTimer);
-        }
-
-        // Set new timer for grammar checking
-        this.typingTimer = setTimeout(() => {
-            if (this.currentTextarea) {
-                this.checkGrammar(this.currentTextarea.value);
-            }
-        }, immediate ? 0 : 1000); // Immediate or 1 second delay
+  private setupTextareaHandlers(textarea: HTMLTextAreaElement): void {
+    // Remove old listeners if they exist
+    if (this.currentTextarea) {
+      this.currentTextarea.removeEventListener("scroll", this.handleScroll);
     }
 
-    private setupTextareaHandlers(textarea: HTMLTextAreaElement): void {
-        // Remove old listeners if they exist
+    // Set up new scroll listener
+    this.currentTextarea = textarea;
+    this.handleScroll = () => {
+      if (this.currentTextarea) {
+        this.overlayContent.style.transform = `translateY(-${this.currentTextarea.scrollTop}px)`;
+      }
+    };
+
+    // Set up input handler that triggers grammar check
+    const handleInput = () => this.startGrammarCheck();
+
+    textarea.addEventListener("scroll", this.handleScroll);
+    textarea.addEventListener("input", handleInput);
+
+    // Initial sync
+    this.handleScroll();
+  }
+
+  private updatePopupContent(error: APIGrammarError): void {
+    const content = this.popup.querySelector(".gramcheck-error-popup-content");
+    if (!content) return;
+
+    const titleElement = content.querySelector(".gramcheck-error-popup-error-title") as HTMLElement;
+    const descriptionElement = content.querySelector(
+      ".gramcheck-error-popup-error-description",
+    ) as HTMLElement;
+    const suggestionsElement = content.querySelector(
+      ".gramcheck-error-popup-suggestions",
+    ) as HTMLElement;
+
+    titleElement.textContent = error.title;
+    descriptionElement.textContent = error.description;
+
+    // Clear and update suggestions
+    suggestionsElement.innerHTML = "";
+    error.suggestions.forEach((suggestion) => {
+      const suggestionEl = document.createElement("button");
+      suggestionEl.className = "gramcheck-error-popup-suggestion";
+      suggestionEl.textContent = suggestion;
+      suggestionEl.addEventListener("click", () => {
         if (this.currentTextarea) {
-            this.currentTextarea.removeEventListener('scroll', this.handleScroll);
+          // Replace the text in the textarea
+          const start = error.start_index;
+          const end = error.end_index;
+          const value = this.currentTextarea.value;
+          this.currentTextarea.value = value.substring(0, start) + suggestion +
+            value.substring(end);
+
+          // Trigger input event to update overlay
+          this.currentTextarea.dispatchEvent(new Event("input"));
+
+          // Hide popup
+          this.popup.style.display = "none";
         }
+      });
+      suggestionsElement.appendChild(suggestionEl);
+    });
+  }
 
-        // Set up new scroll listener
-        this.currentTextarea = textarea;
-        this.handleScroll = () => {
-            if (this.currentTextarea) {
-                this.overlayContent.style.transform = `translateY(-${this.currentTextarea.scrollTop}px)`;
-            }
-        };
-        
-        // Set up input handler that triggers grammar check
-        const handleInput = () => this.startGrammarCheck();
+  private updateButtonState(errorCount: number): void {
+    if (errorCount > 0) {
+      this.languageButton.classList.add("has-errors");
+      this.languageButton.dataset.errorCount = errorCount.toString();
+    } else {
+      this.languageButton.classList.remove("has-errors");
+      delete this.languageButton.dataset.errorCount;
+    }
+  }
 
-        textarea.addEventListener('scroll', this.handleScroll);
-        textarea.addEventListener('input', handleInput);
-        
-        // Initial sync
-        this.handleScroll();
+  public cleanup(): void {
+    // Remove elements from DOM
+    this.overlay.remove();
+    this.popup.remove();
+    this.languagePopup.remove();
+    this.languageButton.remove();
+    this.loadingSpinner.remove();
+
+    // Clean up event listeners
+    if (this.currentTextarea) {
+      this.currentTextarea.removeEventListener("scroll", this.handleScroll);
+      self.removeEventListener("scroll", () => this.updatePosition(this.currentTextarea!));
     }
 
-    private updatePopupContent(error: APIGrammarError): void {
-        const content = this.popup.querySelector(".gramcheck-error-popup-content");
-        if (!content) return;
-
-        const titleElement = content.querySelector(".gramcheck-error-popup-error-title") as HTMLElement;
-        const descriptionElement = content.querySelector(".gramcheck-error-popup-error-description") as HTMLElement;
-        const suggestionsElement = content.querySelector(".gramcheck-error-popup-suggestions") as HTMLElement;
-
-        titleElement.textContent = error.title;
-        descriptionElement.textContent = error.description;
-        
-        // Clear and update suggestions
-        suggestionsElement.innerHTML = '';
-        error.suggestions.forEach(suggestion => {
-            const suggestionEl = document.createElement("button");
-            suggestionEl.className = "gramcheck-error-popup-suggestion";
-            suggestionEl.textContent = suggestion;
-            suggestionEl.addEventListener("click", () => {
-                if (this.currentTextarea) {
-                    // Replace the text in the textarea
-                    const start = error.start_index;
-                    const end = error.end_index;
-                    const value = this.currentTextarea.value;
-                    this.currentTextarea.value = value.substring(0, start) + suggestion + value.substring(end);
-                    
-                    // Trigger input event to update overlay
-                    this.currentTextarea.dispatchEvent(new Event('input'));
-                    
-                    // Hide popup
-                    this.popup.style.display = "none";
-                }
-            });
-            suggestionsElement.appendChild(suggestionEl);
-        });
+    // Clear any pending timers
+    if (this.typingTimer) {
+      clearTimeout(this.typingTimer);
     }
 
-    private updateButtonState(errorCount: number): void {
-        if (errorCount > 0) {
-            this.languageButton.classList.add('has-errors');
-            this.languageButton.dataset.errorCount = errorCount.toString();
-        } else {
-            this.languageButton.classList.remove('has-errors');
-            delete this.languageButton.dataset.errorCount;
-        }
-    }
-
-    public cleanup(): void {
-        // Remove elements from DOM
-        this.overlay.remove();
-        this.popup.remove();
-        this.languagePopup.remove();
-        this.languageButton.remove();
-        this.loadingSpinner.remove();
-
-        // Clean up event listeners
-        if (this.currentTextarea) {
-            this.currentTextarea.removeEventListener('scroll', this.handleScroll);
-            window.removeEventListener('scroll', () => this.updatePosition(this.currentTextarea!));
-        }
-
-        // Clear any pending timers
-        if (this.typingTimer) {
-            clearTimeout(this.typingTimer);
-        }
-
-        // Clear error map
-        this.errorMap.clear();
-    }
-
+    // Clear error map
+    this.errorMap.clear();
+  }
 }

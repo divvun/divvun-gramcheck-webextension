@@ -11,7 +11,6 @@ console.log("Popup script loaded");
 //     "result"
 //   )!.textContent = `WASM calculation: 5 + 3 = ${result}`;
 
-  
 //   const tabs = await browser.tabs.query({ active: true, currentWindow: true });
 //   const activeTab = tabs[0];
 //   document.getElementById(

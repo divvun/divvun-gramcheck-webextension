@@ -1,0 +1,35 @@
+{
+  "tasks": {
+    "clean": "cd rust && cargo clean",
+    "build": "deno run -A build.ts",
+    "build:prod": "NODE_ENV=production deno run -A build.ts",
+    "cb": "deno task clean && deno task build",
+    "watch": "deno run -A watch.ts",
+    "dev": "deno task watch"
+  },
+  "imports": {
+    "@std/fs": "jsr:@std/fs@^1.0.18",
+    "@std/path": "jsr:@std/path@^1.1.0",
+    "esbuild": "https://deno.land/x/esbuild@v0.19.11/mod.js",
+    "esbuild/": "https://deno.land/x/esbuild@v0.19.11/",
+    "webextension-polyfill": "npm:webextension-polyfill@^0.12.0"
+  },
+  "compilerOptions": {
+    "lib": ["deno.window", "dom", "webextension"],
+    "strict": true
+  },
+  "fmt": {
+    "useTabs": false,
+    "lineWidth": 100,
+    "indentWidth": 2,
+    "semiColons": true,
+    "singleQuote": false,
+    "proseWrap": "preserve",
+    "include": ["src/", "*.ts"],
+    "exclude": ["dist/", "node_modules/"]
+  },
+  "lint": {
+    "include": ["src/", "*.ts"],
+    "exclude": ["dist/", "node_modules/"]
+  }
+} 

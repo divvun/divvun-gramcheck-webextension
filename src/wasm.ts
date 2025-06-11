@@ -1,4 +1,5 @@
-import browser from "webextension-polyfill";
+// @ts-types="npm:@types/webextension-polyfill"
+import * as browser from "webextension-polyfill";
 
 // After many failed attempts to get the WASM module to work with webpack, this one works
 export const loadWasm = async () => {
@@ -8,14 +9,14 @@ export const loadWasm = async () => {
 
     // Important to have webpack ignore the wasm js to prevent bundling, which breaks everything
     const jsModule = await import(/* webpackIgnore: true */ jsPath);
-    
+
     // Then fetch and initialize WASM
     const wasmResponse = await fetch(wasmPath);
     const wasmBuffer = await wasmResponse.arrayBuffer();
-    
+
     // Initialize the WASM module
     await jsModule.default({ wasmBuffer });
-    
+
     return jsModule;
   } catch (error) {
     console.error("Failed to load WASM module:", error);

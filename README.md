@@ -4,10 +4,9 @@ A proof-of-concept grammar checker that works with standard `<textarea>` HTML el
 
 ### Setup
 1. Checkout this repo
-2. Install dependencies with `npm install`
-3. Build the extension with `npm run build`. This will generate a `dist` folder
-4. Open Google Chrome and follow [these instructions to enable an unpacked extension](https://developer.chrome.com/docs/extensions/get-started/tutorial/hello-world#load-unpacked), navigating to the newly-generated `dist` folder
-5. Navigate to one of the below testing websites and enter some text. Your grammar will be checked as you type, and errors will appear underlined in red. Clicking an underlined word will show you suggestions to help improve your writing.
+2. Build the extension with `deno task build`. This will generate a `dist` folder
+3. Open Google Chrome and follow [these instructions to enable an unpacked extension](https://developer.chrome.com/docs/extensions/get-started/tutorial/hello-world#load-unpacked), navigating to the newly-generated `dist` folder
+4. Navigate to one of the below testing websites and enter some text. Your grammar will be checked as you type, and errors will appear underlined in red. Clicking an underlined word will show you suggestions to help improve your writing.
 
 ### Rust-wasm
 
