@@ -1,6 +1,6 @@
 import { copy, ensureDir, exists } from "@std/fs";
 import { join } from "@std/path";
-import { build, context, BuildOptions } from "esbuild";
+import { build, context, BuildOptions, PluginBuild } from "esbuild";
 import { denoPlugins } from "jsr:@luca/esbuild-deno-loader@^0.11.1";
 
 const isWatch = Deno.args.includes("--watch") || Deno.args.includes("-w");
@@ -151,7 +151,7 @@ try {
         ...buildConfig.plugins || [],
         {
           name: 'watch-logger',
-          setup(build) {
+          setup(build: PluginBuild) {
             let startTime: number;
             build.onStart(() => {
               startTime = Date.now();
