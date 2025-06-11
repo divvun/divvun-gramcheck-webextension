@@ -1,6 +1,7 @@
 import { copy, ensureDir, exists } from "@std/fs";
 import { join } from "@std/path";
 import { build } from "esbuild";
+import { denoPlugins } from "jsr:@luca/esbuild-deno-loader@^0.11.1";
 
 // Clean dist directory
 try {
@@ -90,6 +91,7 @@ const processHTML = async (templatePath: string, outputPath: string, scriptName:
 </head>
 <body>
   <div id="app"></div>
+  <script src="webextension-polyfill.js"></script>
   <script src="${scriptName}.js"></script>
 </body>
 </html>`;
@@ -102,7 +104,7 @@ const processHTML = async (templatePath: string, outputPath: string, scriptName:
   // Replace the module script with the built JavaScript
   html = html.replace(
     /<script src="\.\/index\.ts" type="module"><\/script>/,
-    `<script src="${scriptName}.js"></script>`,
+    `<script src="webextension-polyfill.js"></script><script src="${scriptName}.js"></script>`,
   );
 
   // Remove any webpack-specific comments
@@ -118,6 +120,7 @@ await processHTML("src/options/index.html", "dist/options.html", "options");
 
 // esbuild configuration
 const buildConfig = {
+  plugins: [...denoPlugins()],
   entryPoints: {
     background: "src/background/index.ts",
     content: "src/content/index.ts",
@@ -126,7 +129,7 @@ const buildConfig = {
   },
   bundle: true,
   outdir: "dist",
-  format: "iife" as const,
+  format: "esm",
   target: "es2018",
   sourcemap: true,
   minify: Deno.env.get("NODE_ENV") === "production",
@@ -138,6 +141,26 @@ const buildConfig = {
   },
   external: [], // Don't externalize any modules for web extension
 };
+
+// Download webextension-polyfill
+console.log("Downloading webextension-polyfill...");
+try {
+  const response = await fetch(
+    "https://unpkg.com/webextension-polyfill@0.12.0/dist/browser-polyfill.min.js",
+  );
+  if (!response.ok) {
+    throw new Error(`Failed to download webextension-polyfill: ${response.status}`);
+  }
+  const polyfillContent = await response.text();
+  await Deno.writeTextFile("dist/webextension-polyfill.js", polyfillContent);
+  console.log("webextension-polyfill downloaded successfully");
+} catch (error) {
+  console.error(
+    "Failed to download webextension-polyfill:",
+    error instanceof Error ? error.message : String(error),
+  );
+  Deno.exit(1);
+}
 
 // Build with esbuild
 console.log("Building with esbuild...");
