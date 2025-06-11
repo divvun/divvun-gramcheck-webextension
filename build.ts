@@ -14,8 +14,6 @@ const getBaseBuildConfig = (isProduction = false): BuildOptions => ({
   entryPoints: {
     background: "src/background/index.ts",
     content: "src/content/index.ts",
-    popup: "src/popup/index.ts",
-    options: "src/options/index.ts",
   },
   bundle: true,
   outdir: "dist",
@@ -120,40 +118,6 @@ const copyWasmFiles = async (src: string, dest: string) => {
   }
 };
 
-const processHTML = async (templatePath: string, outputPath: string, scriptName: string) => {
-  if (!(await exists(templatePath))) {
-    console.warn(`Template ${templatePath} not found, creating basic HTML`);
-    const basicHTML = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Extension Page</title>
-</head>
-<body>
-  <div id="app"></div>
-  <script src="webextension-polyfill.js"></script>
-  <script src="${scriptName}.js"></script>
-</body>
-</html>`;
-    await Deno.writeTextFile(outputPath, basicHTML);
-    return;
-  }
-
-  let html = await Deno.readTextFile(templatePath);
-
-  // Replace the module script with the built JavaScript
-  html = html.replace(
-    /<script src="\.\/index\.ts" type="module"><\/script>/,
-    `<script src="${scriptName}.js"></script>`,
-  );
-
-  // Remove any webpack-specific comments
-  html = html.replace(/<!-- In Webpack.*?-->/s, "");
-  html = html.replace(/<!-- If using Vite.*?-->/s, "");
-
-  await Deno.writeTextFile(outputPath, html);
-};
 
 const copyStaticFiles = async () => {
   console.log("Copying static files...");
@@ -167,9 +131,6 @@ const copyStaticFiles = async () => {
   // Copy WASM files
   await copyWasmFiles("src/wasm", "dist/wasm");
 
-  // Process HTML files
-  await processHTML("src/popup/index.html", "dist/popup.html", "popup");
-  await processHTML("src/options/index.html", "dist/options.html", "options");
 };
 
 // Clean dist directory
