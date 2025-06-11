@@ -86,16 +86,6 @@ const copyPolyfill = async () => {
   }
 };
 
-const copyRecursive = async (src: string, dest: string) => {
-  try {
-    await copy(src, dest, { overwrite: true });
-  } catch (error) {
-    console.warn(
-      `Failed to copy ${src} to ${dest}:`,
-      error instanceof Error ? error.message : String(error),
-    );
-  }
-};
 
 const copyWasmFiles = async (src: string, dest: string) => {
   if (!(await exists(src))) return;
@@ -123,14 +113,13 @@ const copyStaticFiles = async () => {
   console.log("Copying static files...");
 
   // Copy manifest and icons
-  await copyRecursive("manifest.json", "dist/manifest.json");
+  await copy("manifest.json", "dist/manifest.json", { overwrite: true });
   if (await exists("icons")) {
-    await copyRecursive("icons", "dist/icons");
+    await copy("icons", "dist/icons", { overwrite: true });
   }
 
   // Copy WASM files
   await copyWasmFiles("src/wasm", "dist/wasm");
-
 };
 
 // Clean dist directory
