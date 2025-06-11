@@ -113,7 +113,7 @@ const copyStaticFiles = async () => {
   console.log("Copying static files...");
 
   // Copy manifest and icons
-  await copy("manifest.json", "dist/manifest.json", { overwrite: true });
+  await Deno.copyFile("manifest.json", "dist/manifest.json");
   if (await exists("icons")) {
     await copy("icons", "dist/icons", { overwrite: true });
   }
