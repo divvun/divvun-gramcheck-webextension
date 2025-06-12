@@ -1,4 +1,4 @@
-import { apiRequestLanguageOptions, apiRequestGrammarCheck, APIGrammarError } from "./utils/api";
+import { apiRequestLanguageOptions, apiRequestGrammarCheck, APIGrammarError } from "./utils/api.ts";
 import browser from "webextension-polyfill";
 
 interface LanguageChoice {
