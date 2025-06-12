@@ -1,5 +1,5 @@
 // import 'whatwg-fetch';
-import { APIGrammarError } from './api';
+import { APIGrammarError } from './api.ts';
 
 export const IGNORED_ERROR_TAGS_KEY = 'ignoredErrorTags';
 export const SELECTED_LANGUAGE_KEY = 'selectedLanguage';

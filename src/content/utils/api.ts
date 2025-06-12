@@ -1,4 +1,4 @@
-import { normalizeLineEndings, loadSettings, IGNORED_ERROR_TAGS_KEY, SELECTED_LANGUAGE_KEY, filterIgnoredIndividualErrors as filterIgnoredIndividualErrors, filterIgnoredErrorTags } from '.';
+import { normalizeLineEndings, loadSettings, IGNORED_ERROR_TAGS_KEY, SELECTED_LANGUAGE_KEY, filterIgnoredIndividualErrors as filterIgnoredIndividualErrors, filterIgnoredErrorTags } from './index.ts';
 
 const apiUrl = 'https://api-giellalt.uit.no/';
 

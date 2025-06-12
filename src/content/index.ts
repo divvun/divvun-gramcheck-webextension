@@ -1,5 +1,5 @@
-import { loadWasm } from "../wasm";
-import { OverlayManager } from "./overlay-manager";
+import { loadWasm } from "../wasm.ts";
+import { OverlayManager } from "./overlay-manager.ts";
 
 console.log("Content script loaded");
 
