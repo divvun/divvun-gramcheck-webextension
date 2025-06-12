@@ -423,34 +423,6 @@ export class OverlayManager {
                 padding: 4px;
                 font-size: 14px;
             }
-            .gramcheck-language-list-container {
-                flex: 1;
-                overflow-y: auto;
-                min-height: 0;
-            }
-            .gramcheck-language-list {
-                list-style: none;
-                margin: 0;
-                padding: 0;
-            }
-            .gramcheck-language-item {
-                padding: 8px 16px;
-                cursor: pointer;
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-            }
-            .gramcheck-language-item:hover {
-                background: #f5f5f5;
-            }
-            .gramcheck-language-item.selected {
-                color: var(--primary-color);
-                font-weight: 500;
-            }
-            .gramcheck-language-item.selected::after {
-                content: "✓";
-                margin-left: 8px;
-            }
 
             .gramcheck-popup-title {
                 display: flex;
@@ -483,20 +455,6 @@ export class OverlayManager {
             }
             .gramcheck-popup-close:hover {
                 color: var(--text-color);
-            }
-            .gramcheck-popup-content {
-                padding: 8px;
-                max-height: 200px;
-                overflow-y: auto;
-            }
-            .gramcheck-popup-error-title {
-                font-weight: 500;
-                margin-bottom: 4px;
-                color: var(--text-color);
-            }
-            .gramcheck-popup-error-description {
-                margin-bottom: 8px;
-                color: var(--text-secondary);
             }
         `;
     }
@@ -647,32 +605,6 @@ export class OverlayManager {
           "border",
           "width",
           "height",
-          // // Font properties
-          // "font", "color", "fontSize", "fontFamily", "fontWeight", "fontStyle",
-          // "lineHeight", "letterSpacing", "wordSpacing", "textTransform",
-          // "textIndent", "textAlign", "direction",
-
-          // // Box model
-          // // "padding",
-          // "paddingTop", "paddingRight", "paddingBottom", "paddingLeft",
-          // "margin", "marginTop", "marginRight", "marginBottom", "marginLeft",
-          // "border", "borderWidth", "borderStyle", "borderColor",
-          // "borderRadius", "borderTopLeftRadius", "borderTopRightRadius",
-          // "borderBottomLeftRadius", "borderBottomRightRadius",
-
-          // // Sizing and positioning
-          // "width", "height", "minWidth", "minHeight", "maxWidth", "maxHeight",
-          // "boxSizing",
-
-          // // Visual properties
-          // "backgroundColor", "backgroundImage", "backgroundPosition", "backgroundRepeat",
-          // "boxShadow", "opacity",
-
-          // // Text overflow and wrapping
-          // "whiteSpace", "wordBreak", "overflowWrap", "textOverflow",
-
-          // // Scrolling
-          // "overflowX", "overflowY"
         ];
 
         const styles: Partial<CSSStyleDeclaration> = {};
@@ -709,16 +641,6 @@ export class OverlayManager {
         this.overlay.style.left = `${rect.left + window.scrollX}px`;
         this.overlay.style.top = `${rect.top + window.scrollY}px`;
         this.overlay.style.pointerEvents = "none"; // Allow clicks to pass through to textarea
-
-        // Override specific styles for the overlay's functionality
-        // this.overlay.style.backgroundColor = "white"; // Make overlay background white
-        // this.overlay.style.pointerEvents = "auto"; // Enable interaction
-        // this.overlay.style.minHeight = "100px"; // Minimum height for visibility
-        // this.overlay.style.maxHeight = "200px"; // Maximum height before scrolling
-        // this.overlay.style.overflowY = "auto"; // Enable vertical scrolling if needed
-        // this.overlay.style.border = "1px solid #ccc"; // Add a light border
-        // this.overlay.style.boxShadow = "0 2px 6px rgba(0,0,0,0.15)"; // Add subtle shadow
-        // this.overlay.style.zIndex = "1000"; // Ensure overlay appears above other content
     }
 
     private async checkGrammar(text: string): Promise<void> {
