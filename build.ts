@@ -1,6 +1,6 @@
 import { copy, ensureDir, expandGlob } from "@std/fs";
 import { join } from "@std/path";
-import { build } from "esbuild";
+import { build, context } from "esbuild";
 import buildConfig from "./esbuild.config.ts";
 
 const copyWasmFiles = async (src: string, dest: string) => {
@@ -42,6 +42,14 @@ async function buildWasm() {
 }
 
 async function main() {
+  const isWatch = Deno.args.includes("--watch") || Deno.args.includes("-w");
+  const isProd = Deno.args.includes("--prod") || Deno.args.includes("-p");
+
+  // Set environment for config
+  if (isProd) {
+    Deno.env.set("NODE_ENV", "production");
+  }
+
   try {
     await Deno.remove("dist", { recursive: true });
   } catch {
@@ -55,17 +63,22 @@ async function main() {
   await copy("icons", "dist/icons");
   await copyWasmFiles("src/wasm", "dist/wasm");
 
-  // Build with esbuild
-  console.log("Building with esbuild...");
-  try {
-    await build(buildConfig);
-    console.log("Build completed successfully!");
-  } catch (error) {
-    console.error("Build failed:", error);
-    Deno.exit(1);
-  } finally {
-    // Stop esbuild's service
-    Deno.exit(0);
+  if (isWatch) {
+    console.log("Setting up watch mode...");
+    const ctx = await context(buildConfig);
+    await ctx.watch();
+    console.log("Watching for changes... (Press Ctrl+C to stop)");
+  } else {
+    console.log("Building with esbuild...");
+    try {
+      await build(buildConfig);
+      console.log("Build completed successfully!");
+    } catch (error) {
+      console.error("Build failed:", error);
+      Deno.exit(1);
+    } finally {
+      Deno.exit(0);
+    }
   }
 }
 
