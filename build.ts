@@ -1,6 +1,6 @@
 import { copy, ensureDir, expandGlob } from "@std/fs";
 import { join } from "@std/path";
-import { build, context } from "esbuild";
+import { build, context, PluginBuild } from "esbuild";
 import buildConfig from "./esbuild.config.ts";
 
 const copyWasmFiles = async (src: string, dest: string) => {
@@ -65,14 +65,43 @@ async function main() {
 
   if (isWatch) {
     console.log("Setting up watch mode...");
-    const ctx = await context(buildConfig);
+    const watchConfig = {
+      ...buildConfig,
+      plugins: [
+        ...buildConfig.plugins || [],
+        {
+          name: 'watch-logger',
+          setup(build: PluginBuild) {
+            let startTime: number;
+            build.onStart(() => {
+              startTime = Date.now();
+              console.log('Build started...');
+            });
+            build.onEnd((result) => {
+              const duration = Date.now() - startTime;
+              if (result.errors.length > 0) {
+                console.error(`Build failed (${duration}ms):`, result.errors);
+              } else {
+                console.log(`Build succeeded (${duration}ms)`);
+                if (result.warnings.length > 0) {
+                  console.warn('Warnings:', result.warnings);
+                }
+              }
+            });
+          },
+        },
+      ],
+    };
+    const ctx = await context(watchConfig);
     await ctx.watch();
     console.log("Watching for changes... (Press Ctrl+C to stop)");
   } else {
     console.log("Building with esbuild...");
+    const startTime = Date.now();
     try {
       await build(buildConfig);
-      console.log("Build completed successfully!");
+      const duration = Date.now() - startTime;
+      console.log(`Build completed successfully! (${duration}ms)`);
     } catch (error) {
       console.error("Build failed:", error);
       Deno.exit(1);
