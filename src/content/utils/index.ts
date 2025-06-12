@@ -1,3 +1,5 @@
+// Pulled from https://github.com/divvun/divvun-gramcheck-web/
+
 // import 'whatwg-fetch';
 import { APIGrammarError } from './api';
 

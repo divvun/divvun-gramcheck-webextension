@@ -1,3 +1,5 @@
+// Pulled from https://github.com/divvun/divvun-gramcheck-web/
+
 import { normalizeLineEndings, loadSettings, IGNORED_ERROR_TAGS_KEY, SELECTED_LANGUAGE_KEY, filterIgnoredIndividualErrors as filterIgnoredIndividualErrors, filterIgnoredErrorTags } from '.';
 
 const apiUrl = 'https://api-giellalt.uit.no/';
