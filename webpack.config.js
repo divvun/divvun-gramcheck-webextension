@@ -10,8 +10,6 @@ module.exports = {
   entry: {
     background: "./src/background/index.ts",
     content: "./src/content/index.ts",
-    popup: "./src/popup/index.ts",
-    options: "./src/options/index.ts",
   },
   output: {
     path: path.resolve(__dirname, "dist"),
@@ -46,16 +44,6 @@ module.exports = {
           globOptions: { ignore: ["**/*.ts", "**/.gitignore", "**/package.json"] },
         },
       ],
-    }),
-    new HtmlWebpackPlugin({
-      template: "./src/popup/index.html",
-      filename: "popup.html",
-      chunks: ["popup"],
-    }),
-    new HtmlWebpackPlugin({
-      template: "./src/options/index.html",
-      filename: "options.html",
-      chunks: ["options"],
     }),
   ],
   experiments: {
